@@ -124,12 +124,14 @@
     "format-charging": " {capacity}%",
     "format-plugged": " {capacity}%",
     "format-icons": ["", "", "", "", ""],
+    "tooltip-format": "{capacity}% · {time}",
     "on-click": "~/.config/waybar/scripts/battery-control.sh strategy",
     "on-click-right": "~/.config/waybar/scripts/battery-control.sh charge",
     "on-click-middle": "~/.config/waybar/scripts/battery-control.sh optimize"
   },
   "battery#power": {
     "format": "󰢝 {power:0.2f}w",
+    "format-full": "󰢝 满电",
     "interval": 5,
     "tooltip-format": "{capacity}% · {time}",
     "on-click": "~/.config/waybar/scripts/battery-control.sh strategy"
