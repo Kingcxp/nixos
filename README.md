@@ -6,6 +6,9 @@ flake 式 NixOS 配置。参考朋友的仓库（`../nixos`）搭建，双方配
 
 > **新手？** 先读 [`USAGE.md`](./USAGE.md) —— 这是一份中文的 NixOS 使用指南，
 > 覆盖日常命令、装软件、常用软件用法、回滚与故障排查。
+>
+> **想先试装再上真机？** 看 [`VM-TEST.md`](./VM-TEST.md) —— VirtualBox
+> 虚拟机试装指南（磁盘/显卡/显示器的虚拟机差异、完整流程）。
 
 ---
 
@@ -270,7 +273,6 @@ nixos-rebuild build --flake /etc/nixos#thinkbook
 
 ---
 
-## 相关文档
-
 - [`USAGE.md`](./USAGE.md) —— 中文使用指南（日常命令、装软件、故障排查）
+- [`VM-TEST.md`](./VM-TEST.md) —— VirtualBox 虚拟机试装指南
 - 参考仓库：`../nixos`（朋友的原配置）
