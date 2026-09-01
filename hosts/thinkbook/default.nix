@@ -32,13 +32,21 @@
     pkgs.gh
   ];
 
-  # NOPASSWD sudo for powertop so the waybar battery menu works without a prompt
+  # NOPASSWD sudo for powertop + battery control (platform_profile / conservation_mode)
   security.sudo.extraRules = [
     {
       users = [ username ];
       commands = [
         {
           command = "${pkgs.powertop}/bin/powertop";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/tee /sys/firmware/acpi/platform_profile";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/tee /sys/devices/pci0000:00/0000:00:1f.0/PNP0C09:00/VPC2004:00/conservation_mode";
           options = [ "NOPASSWD" ];
         }
       ];

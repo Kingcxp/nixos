@@ -123,16 +123,15 @@
     "format": "{icon}  {capacity}%",
     "format-charging": " {capacity}%",
     "format-plugged": " {capacity}%",
-    "format-alt": "{time} {icon}",
     "format-icons": ["", "", "", "", ""],
-    "on-click": "~/.config/waybar/scripts/powertop-toggle.sh menu",
-    "on-click-right": "~/.config/waybar/scripts/powertop-toggle.sh toggle",
-    "on-click-middle": "~/.config/waybar/scripts/powertop-toggle.sh optimize"
+    "on-click": "~/.config/waybar/scripts/battery-control.sh strategy",
+    "on-click-right": "~/.config/waybar/scripts/battery-control.sh charge",
+    "on-click-middle": "~/.config/waybar/scripts/battery-control.sh optimize"
   },
   "battery#power": {
     "format": "󰢝 {power:0.2f}w",
     "interval": 5,
     "tooltip-format": "{capacity}% · {time}",
-    "on-click": "~/.config/waybar/scripts/powertop-toggle.sh menu"
+    "on-click": "~/.config/waybar/scripts/battery-control.sh strategy"
   }
 }
