@@ -132,6 +132,8 @@
   "battery#power": {
     "format": "󰢝 {power:0.2f}w",
     "format-charging": "<span color='#a6da95'>󰂄 {power:0.2f}w</span>",
+    "format-plugged": "<span color='#a6da95'>󰂄 {power:0.2f}w</span>",
+    "format-full": "<span color='#a6da95'>󰂄 {power:0.2f}w</span>",
     "interval": 5,
     "tooltip-format": "{capacity}% · {time}"
   }
