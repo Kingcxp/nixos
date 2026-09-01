@@ -1,0 +1,6 @@
+// Built-in panel: BOE 0x0981 (2560x1600), like Hyprland's monitor line.
+output "eDP-1" {
+    mode "2560x1600@60"
+    scale 1.666667
+    transform "normal"
+}

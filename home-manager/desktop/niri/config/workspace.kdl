@@ -1,0 +1,4 @@
+// Named workspaces — waybar shows these as icons
+workspace "web"
+workspace "code"
+workspace "chat"

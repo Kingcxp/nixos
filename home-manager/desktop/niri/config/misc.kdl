@@ -1,0 +1,24 @@
+// Misc settings — user's theme is Catppuccin Macchiato
+prefer-no-csd
+
+cursor {
+    // User prefers catppuccin-macchiato-lavender-cursors
+    xcursor-theme "catppuccin-macchiato-lavender-cursors"
+    xcursor-size 24
+}
+
+animations {
+    // defaults
+}
+
+overview {
+    workspace-shadow {
+        off
+    }
+}
+
+gestures {
+    hot-corners {
+        off
+    }
+}

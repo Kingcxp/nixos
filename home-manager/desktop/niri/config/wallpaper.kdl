@@ -1,0 +1,11 @@
+// Wallpaper via swaybg (image deployed to ~/.config/wallpaper/wallpaper.jpg)
+spawn-sh-at-startup "swaybg -m fill -i ~/.config/wallpaper/wallpaper.jpg"
+
+layer-rule {
+    match namespace="^wallpaper$"
+    place-within-backdrop true
+}
+
+layout {
+    background-color "#00000040"
+}

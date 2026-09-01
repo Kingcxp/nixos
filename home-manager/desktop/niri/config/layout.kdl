@@ -1,0 +1,15 @@
+// Layout: gaps and column behavior (user prefers 8px-ish, square-ish corners
+// are handled via windowrule geometry-corner-radius).
+layout {
+    gaps 4
+
+    center-focused-column "never"
+
+    preset-column-widths {
+        proportion 0.25
+        proportion 0.5
+        proportion 0.75
+    }
+
+    default-column-width { proportion 0.5; }
+}

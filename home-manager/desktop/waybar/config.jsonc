@@ -1,0 +1,138 @@
+{
+  "layer": "top",
+  "position": "top",
+  "spacing": 4,
+  "margin-top": 0,
+  "margin-left": 0,
+  "margin-right": 0,
+  "margin-bottom": 0,
+  "height": 24,
+  "modules-left": ["niri/window", "cpu", "temperature", "memory"],
+  "modules-center": ["niri/workspaces"],
+  "modules-right": [
+    "tray",
+    "pulseaudio",
+    "backlight",
+    "network",
+    "clock",
+    "battery",
+    "battery#power"
+  ],
+  "niri/workspaces": {
+    "format": "{name}",
+    "format-icons": {
+      "web": "󰈹",
+      "code": "⌨",
+      "chat": "󰭻"
+    },
+    "on-scroll-up": "niri msg action focus-workspace-up",
+    "on-scroll-down": "niri msg action focus-workspace-down"
+  },
+  "niri/window": {
+    "format": " {title}",
+    "separate-outputs": true
+  },
+  "tray": {
+    "icon-size": 20,
+    "spacing": 6
+  },
+  "clock": {
+    "interval": 1,
+    "format": "\uf017 {:%H:%M}",
+    "format-alt": "\uf133 {:%Y-%m-%d %H:%M}",
+    "tooltip-format": "<tt><small>{calendar}</small></tt>",
+    "calendar": {
+      "mode": "month",
+      "mode-mon-col": 3,
+      "weeks-pos": "right",
+      "on-scroll": 1,
+      "format": {
+        "months": "<span color='#cad3f5'><b>{}</b></span>",
+        "days": "<span color='#a5adcb'><b>{}</b></span>",
+        "weeks": "<span color='#8bd5ca'><b>W{}</b></span>",
+        "weekdays": "<span color='#eed49f'><b>{}</b></span>",
+        "today": "<span color='#ed8796'><b><u>{}</u></b></span>"
+      }
+    },
+    "actions": {
+      "on-click-right": "mode",
+      "on-click-forward": "tz_up",
+      "on-click-backward": "tz_down",
+      "on-scroll-up": "shift_up",
+      "on-scroll-down": "shift_down"
+    }
+  },
+  "cpu": {
+    "interval": 5,
+    "format": " {usage:2}%",
+    "tooltip": true,
+    "on-click": "kitty -e btop"
+  },
+  "temperature": {
+    "critical-threshold": 85,
+    "format": "{icon} {temperatureC}°C",
+    "format-icons": ["", "", ""],
+    "on-click": "kitty -e btop"
+  },
+  "memory": {
+    "interval": 5,
+    "format": "\uf538 {used:0.1f}G",
+    "tooltip": true,
+    "tooltip-format": " RAM: {used:0.2f}G / {total:0.2f}G\nSwap: {swapUsed:0.2f}G / {swapTotal:0.2f}G",
+    "on-click": "kitty -e btop"
+  },
+  "network": {
+    "interval": 5,
+    "format-wifi": "\uf1eb {signalStrength}%",
+    "format-ethernet": "\uf6ff {ifname}",
+    "format-linked": "\uf059 No IP ({ifname})",
+    "format-disconnected": "\uf071 Disconnected",
+    "tooltip-format": "{ifname} {ipaddr}/{cidr} via {gwaddr}",
+    "format-alt": "\uf6ff {ipaddr}/{cidr}",
+    "on-click": "nm-connection-editor",
+    "on-click-right": "kitty -e nmtui"
+  },
+  "pulseaudio": {
+    "scroll-step": 5,
+    "format": "{icon} {volume:2}%",
+    "format-muted": "\uf6a9",
+    "format-bluetooth": "{icon}\uf294 {volume}%",
+    "format-bluetooth-muted": "\ufa69 {icon}\uf294",
+    "format-icons": {
+      "default": ["\uf026", "\uf027", "\uf028"]
+    },
+    "on-click": "pavucontrol",
+    "on-click-middle": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-click-right": "pavucontrol",
+    "ignored-sinks": ["AudioRelay Virtual Sink", "Recorder Sink"]
+  },
+  "backlight": {
+    "tooltip": false,
+    "format": " {}%",
+    "interval": 5,
+    "scroll-step": 1.0,
+    "smooth-scrolling-threshold": 1.0,
+    "min-brightness": 5
+  },
+  "battery": {
+    "states": {
+      "good": 70,
+      "warning": 30,
+      "critical": 20
+    },
+    "format": "{icon}  {capacity}%",
+    "format-charging": " {capacity}%",
+    "format-plugged": " {capacity}%",
+    "format-alt": "{time} {icon}",
+    "format-icons": ["", "", "", "", ""],
+    "on-click": "~/.config/waybar/scripts/powertop-toggle.sh menu",
+    "on-click-right": "~/.config/waybar/scripts/powertop-toggle.sh toggle",
+    "on-click-middle": "~/.config/waybar/scripts/powertop-toggle.sh optimize"
+  },
+  "battery#power": {
+    "format": "󰢝 {power:0.2f}w",
+    "interval": 5,
+    "tooltip-format": "{capacity}% · {time}",
+    "on-click": "~/.config/waybar/scripts/powertop-toggle.sh menu"
+  }
+}

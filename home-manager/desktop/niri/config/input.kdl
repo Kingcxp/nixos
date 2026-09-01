@@ -1,0 +1,21 @@
+// Input device configuration.
+input {
+    keyboard {
+        xkb {
+            // Same layout as Hyprland config: US
+            layout "us"
+        }
+        numlock
+    }
+
+    touchpad {
+        tap
+        natural-scroll
+    }
+
+    mouse {
+        // default
+    }
+
+    // warp-mouse-to-focus
+}

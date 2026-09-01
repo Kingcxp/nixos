@@ -1,0 +1,10 @@
+// Startup commands — mirrors user's Hyprland exec-once autostart
+spawn-at-startup "waybar"
+spawn-at-startup "nm-applet"
+spawn-at-startup "blueman-applet"
+spawn-at-startup "fcitx5" "-d"
+spawn-at-startup "dunst"
+
+hotkey-overlay {
+    skip-at-startup
+}

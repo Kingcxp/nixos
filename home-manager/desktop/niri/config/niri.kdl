@@ -1,0 +1,10 @@
+// niri main config — loaded as config.kdl; includes split files.
+include "input.kdl"
+include "output.kdl"
+include "layout.kdl"
+include "startup.kdl"
+include "wallpaper.kdl"
+include "windowrule.kdl"
+include "bind.kdl"
+include "misc.kdl"
+include "workspace.kdl"

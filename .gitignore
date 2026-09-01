@@ -1,0 +1,12 @@
+# Nix/NixOS build outputs
+result
+result-*
+
+# direnv / envrc
+.direnv
+.envrc
+
+# Editor/OS junk
+*.swp
+*~
+.DS_Store
