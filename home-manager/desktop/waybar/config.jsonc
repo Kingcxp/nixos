@@ -125,6 +125,11 @@
     "format-plugged": " {capacity}%",
     "format-icons": ["", "", "", "", ""],
     "tooltip-format": "{capacity}% · {time}",
+    "tooltip-format-full": "Full · {capacity}%",
+    "tooltip-format-plugged": "Plugged · {capacity}%",
+    "tooltip-format-not-charging": "Not charging · {capacity}%",
+    "tooltip-format-charging": "Charging · {capacity}% · {time}",
+    "tooltip-format-discharging": "{capacity}% · {time}",
     "on-click": "~/.local/bin/battery-control.sh strategy",
     "on-click-right": "~/.local/bin/battery-control.sh charge",
     "on-click-middle": "~/.local/bin/battery-control.sh optimize"
@@ -137,6 +142,11 @@
     "format-full": "<span color='#a6da95'>󰂄 {power:0.2f}w</span>",
     "format-not-charging": "<span color='#a6da95'>󰂄 {power:0.2f}w</span>",
     "interval": 5,
-    "tooltip-format": "{capacity}% · {time}"
+    "tooltip-format": "{capacity}% · {power:0.2f}w",
+    "tooltip-format-full": "Full · {capacity}%",
+    "tooltip-format-plugged": "Plugged · {capacity}%",
+    "tooltip-format-not-charging": "Not charging · {capacity}%",
+    "tooltip-format-charging": "Charging · {capacity}% · {power:0.2f}w",
+    "tooltip-format-discharging": "{capacity}% · {power:0.2f}w"
   }
 }
