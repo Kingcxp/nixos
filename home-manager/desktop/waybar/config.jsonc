@@ -131,8 +131,7 @@
   },
   "battery#power": {
     "format": "󰢝 {power:0.2f}w",
-    "format-alt": "<span color='#a6da95'>󰂄 {power:0.2f}w</span>",
-    "format-alt-click": 1,
+    "format-charging": "<span color='#a6da95'>󰂄 {power:0.2f}w</span>",
     "interval": 5,
     "tooltip-format": "{capacity}% · {time}"
   }
