@@ -118,13 +118,27 @@ nix shell nixpkgs#ripgrep nixpkgs#fd
 | firefox | 浏览器 | `SUPER+F` |
 | dolphin | 文件管理器 | `SUPER+E` |
 | fish | 默认 shell | 打开终端即用 |
-| nvim / micro / nano | 编辑器 | `nvim` / `micro` / `nano` |
+| nvim / micro / nano | 编辑器（终端） | `nvim` / `micro` / `nano` |
+| VSCode | 编辑器（图形，50+ 扩展） | `code`，或 SUPER+R 搜 "Code" |
+| JetBrains IDEA | IDE（IntelliJ 统一版） | `idea`，或 SUPER+R 搜 "IDEA" |
 | yazi | 终端文件管理器 | `yazi` |
 | btop | 系统监控 | `btop`，或在 waybar 点 CPU/内存 |
 | tmux | 终端复用 | `tmux` |
 | dunst | 通知守护 | 自动运行 |
 | wlogout | 注销/关机菜单 | `SUPER+M` |
 | powertop | 电源管理 | waybar 电池右键菜单 |
+
+### 用户与密码
+
+- 用户 `kingcq` 已加入 `wheel` 组，可用 `sudo`。
+- 初始密码 **123456**（`modules/software/system/main.nix` 的
+  `initialPassword`）——**装完请立即修改**：
+
+```bash
+passwd    # 修改当前用户密码
+```
+
+- 密码明文存在于配置里（`/nix/store`），只用于首次登录；改完即失效。
 
 ### 快捷键速查（niri，来自 `bind.kdl`）
 

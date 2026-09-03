@@ -156,8 +156,9 @@ modules/software/system/main.nix   # 系统基础策略（用户、fish、工具
 modules/software/desktop/          # greetd（密码登录）+ niri
 home-manager/                      # 用户应用和 dotfiles
   core.nix                         # home 状态、keyring、深色主题
-  applications.nix                 # firefox、dolphin、QQ 等 + mime 默认
   fish.nix                         # fish shell + oh-my-posh 提示符 + 插件
+  vscode/                          # VSCode 声明式扩展 + settings.json
+  jetbrains/                       # JetBrains IDEA 声明式安装
   kitty/  micro/  btop/  yazi/     # 应用配置，原样部署
   tmux/  nvim/                     # tmux + nvim (AstroNvim) 配置
   powertop/                        # powertop-toggle.sh + waybar 电池接线
@@ -200,15 +201,18 @@ home-manager/                      # 用户应用和 dotfiles
 - **Shell**：fish
 - **通知**：dunst
 - **启动器/注销**：wofi、wlogout
-- **编辑器**：nvim（AstroNvim 配置）
+- **编辑器**：nvim（AstroNvim 配置）、VSCode（声明式扩展 + settings）、
+  JetBrains IntelliJ IDEA（统一版）
 - **文件管理器**：dolphin（`kdePackages.dolphin`）
 - **光标/主题**：catppuccin-macchiato-lavender-cursors、Catppuccin Macchiato
 - **圆角**：约 8px 偏方角，经 `windowrule.kdl` 的 `geometry-corner-radius 8` 应用
 
 ### 未纳入的软件
 
-- **zsh / mako / alacritty / vscode / zed / opencode / 外接屏 kanshi**
+- **zsh / mako / alacritty / zed / opencode / 外接屏 kanshi**
   —— 未采用（分别由 fish、dunst、kitty 等替代，或暂不需要）
+- **PyCharm** —— 当前 nixpkgs 版本存在已知安全漏洞未纳入，Python 开发由
+  VSCode + ms-python 扩展覆盖
 - **Steam / Minecraft / Android Studio / Waydroid** —— 游戏与安卓相关模块
   未纳入本配置
 - **v2raya 代理服务** —— 未启用（如需可加回 `modules/software/system/main.nix`）
@@ -230,6 +234,21 @@ home-manager/                      # 用户应用和 dotfiles
   声明式与可复现性；改用 home-manager 声明式插件即可达到同样效果。
 
 
+
+### 编辑器
+- **VSCode**（`home-manager/vscode/`）：`programs.vscode` 声明式管理，扩展来自
+  nixpkgs `vscode-extensions`（Python/Rust/Go/Java/C++/Docker/Remote-SSH/
+  LaTeX/中文语言包等 50+），用户设置从 `settings.json` 原样部署（保留注释）。
+  扩展与版本都随 flake.lock 锁定，`nix flake update` + rebuild 即整体更新。
+- **JetBrains IntelliJ IDEA**（`home-manager/jetbrains/`）：统一版随系统更新。
+- **nvim**（`home-manager/nvim/`，AstroNvim 配置）。
+
+### 用户与密码
+- 系统用户 `kingcq`：`isNormalUser` + `wheel`（sudo）+ `networkmanager`。
+- 初始密码为 **123456**，**安装后请立即用 `passwd` 修改**——密码保存在
+  `/nix/store` 的明文配置中，仅作首次登录用。
+- sudo 已启用（`security.sudo.enable`），`wheel` 组免密之外的常规 sudo 需要
+  输入密码。
 
 ### 登录
 `modules/software/desktop/greetd.nix` 通过 `tuigreet`（终端式登录管理器）

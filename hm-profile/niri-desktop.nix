@@ -12,6 +12,8 @@
     ../home-manager/tmux
     ../home-manager/nvim
     ../home-manager/powertop
+    ../home-manager/vscode
+    ../home-manager/jetbrains
 
     ../home-manager/desktop/niri
     ../home-manager/desktop/waybar

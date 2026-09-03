@@ -13,11 +13,17 @@
   # User
   users.users.${username} = {
     isNormalUser = true;
+    # 初始密码，安装后请立即用 `passwd` 修改
+    initialPassword = "123456";
     extraGroups = [
-      "wheel"
+      "wheel" # sudo 权限（NixOS 默认 wheel 组可 sudo）
       "networkmanager"
     ];
   };
+
+  # sudo
+  security.sudo.enable = true;
+  security.sudo.wheelNeedsPassword = true;
 
   # git
   programs.git = {
