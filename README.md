@@ -278,13 +278,18 @@ home-manager/                      # 用户应用和 dotfiles
 
 ## 五、验证
 
-配置已在本机用 `nix eval .#nixosConfigurations.thinkbook.config.system.build.toplevel.drvPath`
-**完整求值成功** → `nixos-system-thinkbook-26.11.20260810.2fcb964.drv`（exit 0）。
-全部模块、选项、import 路径有效；抽查确认：无 greetd 自动登录、fish 默认
-shell、v2raya 关闭、niri 启用、dolphin 在位（nautilus 已移除）。
+本配置经过**真实构建验证**（不是只求值）：
 
-并已在本机 `nix build` 完整构建整个系统闭包（14G store，含内核、initrd、
-全部软件），无真实错误。
+- **GitHub Actions CI**（`.github/workflows/build.yml`）：每次 push 都会在
+  干净的 Nix 环境中执行 `nix flake check`（求值）+ `nix build` 完整构建
+  `nixosConfigurations.thinkbook.config.system.build.toplevel`——系统闭包
+  （内核、initrd、sudoers、全部软件）构建失败即红。
+- 本机验证：`nix eval` 求值成功 → `nixos-system-thinkbook-26.11.20260810.2fcb964.drv`；
+  `nix build` 完整构建整个系统闭包无错误。
+
+> 为什么需要 build 而不是只 `flake check`：部分错误只在构建阶段暴露，例如
+> `security.sudo.extraRules` 生成的 sudoers 若含未转义冒号，`visudo` 会在
+> 构建 `sudoers.drv` 时报 syntax error——求值检查完全查不出来。
 
 进一步（装机前彻底验证依赖链）：
 
