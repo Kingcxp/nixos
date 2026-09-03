@@ -1,9 +1,8 @@
 {
   description = "NixOS flake for kingcq's ThinkBook (migrated from Hyprland/Arch to Niri)";
 
-  # Inputs kept identical to the reference repo (RandomLemon/nixos) so the
-  # vendored flake.lock stays a valid, verified version set. Only the
-  # outputs differ (single x86_64 host, user `kingcq`).
+  # Vendored flake.lock pins a verified, buildable version set of all inputs.
+  # nix-community cache is used for extra packages (nix-alien, omp-nix, etc.).
   nixConfig = {
     extra-substituters = [
       "https://mirrors.cernet.edu.cn/nix-channels/store"

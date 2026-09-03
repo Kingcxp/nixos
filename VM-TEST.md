@@ -150,6 +150,31 @@ niri msg outputs
 VirtualBox 的 Wayland 合成器性能一般。若动画卡顿，可在
 `misc.kdl` 的 `animations` 里加 `off` 临时关掉动画，真机再开。
 
+### 报错：efiSysMountPoint = '/boot' is not a mounted partition
+
+`nixos-install` 最后一步安装 bootloader 失败，通常是**硬件配置的 UUID 与
+虚拟盘不匹配**导致 `/boot` 没有被挂载：
+
+1. 仓库里的 `hosts/thinkbook/hardware-configuration.nix` 是**真机 UUID**
+   （`/dev/disk/by-uuid/0A51-499C` 等），在 VM 里不存在。
+2. 必须按第 4 步在 VM 里重新生成并**替换**它：
+
+```bash
+sudo nixos-generate-config --root /mnt
+cp /mnt/etc/nixos/hardware-configuration.nix /mnt/nixos_kingcq/hosts/thinkbook/hardware-configuration.nix
+```
+
+3. 替换后确认挂载点存在、UUID 与 `lsblk -f` 一致：
+
+```bash
+lsblk -f /dev/sda          # 看 sda1 的 UUID（应为 FAT32/EFI）
+cat /mnt/etc/nixos/hardware-configuration.nix | grep -A5 fileSystems
+findmnt /mnt/boot          # 应显示 /dev/sda1 挂载在 /mnt/boot
+```
+
+> 若上面都正确仍报错，检查虚拟机是否**开启了 EFI**（设置 → 系统 →
+> 主板 → 启用 EFI）——BIOS 模式下 systemd-boot 无法安装。
+
 ### 亮度键无效
 
 VM 里没有真实背光，亮度键和 waybar 亮度模块会显示但无效，属正常。
