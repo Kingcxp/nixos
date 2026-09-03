@@ -1,14 +1,14 @@
-# NixOS 配置 — kingcq（ThinkBook）
+# NixOS 系统配置 — kingcq / ThinkBook
 
-面向 ThinkBook 笔记本（11 代 Intel i7-1160G7 / Iris Xe / NVMe / UEFI）的
-flake 式 NixOS 配置。参考朋友的仓库（`../nixos`）搭建，双方配置重叠处
-**以你自己的配置优先**（见下文"重叠策略"）。
+本仓库为 ThinkBook 笔记本（Intel i7-1160G7 / Iris Xe / NVMe / UEFI）的
+Flake 式 NixOS 系统配置，采用声明式方式管理系统环境、用户环境与桌面，
+全部配置可复现、可回滚。
 
-> **新手？** 先读 [`USAGE.md`](./USAGE.md) —— 这是一份中文的 NixOS 使用指南，
-> 覆盖日常命令、装软件、常用软件用法、回滚与故障排查。
->
-> **想先试装再上真机？** 看 [`VM-TEST.md`](./VM-TEST.md) —— VirtualBox
-> 虚拟机试装指南（磁盘/显卡/显示器的虚拟机差异、完整流程）。
+**新手请先阅读《[使用指南](USAGE.md)》**，其中涵盖日常命令、软件管理、
+常用软件用法以及故障排查等内容。
+
+**计划在虚拟机中先行试装？** 请参阅《[VirtualBox 试装指南](VM-TEST.md)》，
+其中说明了虚拟机与真机在磁盘、显卡、显示器等方面的差异及完整操作流程。
 
 ---
 
@@ -32,7 +32,7 @@ U 盘启动 → 选择默认的 "NixOS" 安装项 → 进入 live 环境（自�
 ### 3. 规划磁盘并分区
 
 本配置的 `hosts/thinkbook/hardware-configuration.nix` 使用下面的布局
-（**Btrfs + 子卷 + systemd-boot**，与你的原有 Arch 分区结构一致）：
+（**Btrfs + 子卷 + systemd-boot**，与原 Arch 分区结构一致）：
 
 ```text
 /dev/nvme0n1p1  ->  /boot       (EFI, FAT32, 约 512M–1G)
@@ -145,7 +145,7 @@ nix flake check --flake /etc/nixos#thinkbook
 
 ```text
 flake.nix                          # inputs、mkHost 帮助函数、主机注册表
-flake.lock                         # 锁定版本（与参考仓库同一批 rev，已验证可构建）
+flake.lock                         # 锁定依赖版本（可复现构建）
 .gitignore                         # 忽略 result 等 Nix 构建产物
 README.md                          # 本文件（安装 + 说明）
 USAGE.md                           # 中文 NixOS 使用指南（新手必读）
@@ -157,26 +157,26 @@ modules/software/desktop/          # greetd（密码登录）+ niri
 home-manager/                      # 用户应用和 dotfiles
   core.nix                         # home 状态、keyring、深色主题
   applications.nix                 # firefox、dolphin、QQ 等 + mime 默认
-  fish.nix                         # fish shell（你的偏好，朋友用 zsh）
-  kitty/  micro/  btop/  yazi/     # 你的应用配置，原样部署
-  tmux/  nvim/                     # 你的 tmux + nvim (AstroNvim)
+  fish.nix                         # fish shell + oh-my-posh 提示符 + 插件
+  kitty/  micro/  btop/  yazi/     # 应用配置，原样部署
+  tmux/  nvim/                     # tmux + nvim (AstroNvim) 配置
   powertop/                        # powertop-toggle.sh + waybar 电池接线
   desktop/
     niri/                          # niri 配置（从 Hyprland 迁移）
     waybar/  wofi/  wlogout/  dunst/
-    swayidle/                      # 永不熄屏（你的需求）
+    swayidle/                      # 永不熄屏
     swaylock/                      # catppuccin 锁屏
     kanshi/                        # 显示器 profile（本机面板）
-    wallpaper/                     # 你的壁纸
+    wallpaper/                     # 壁纸
 ```
 
 ---
 
 ## 三、从 Hyprland 迁移到 niri
 
-桌面从 **Hyprland → niri** 迁移（niri 配置格式稳定，且是参考仓库的桌面）：
+桌面从 **Hyprland 迁移至 niri**（niri 配置格式稳定，适合作为长期桌面环境）：
 
-| 你的 (Hyprland) | 本配置 (niri) |
+| 原 Hyprland 配置 | 本配置 (niri) |
 | --- | --- |
 | `hyprland.conf` | `home-manager/desktop/niri/config/*.kdl` |
 | `$mainMod = SUPER` | `Mod`（TTY 上即 Super） |
@@ -192,36 +192,49 @@ home-manager/                      # 用户应用和 dotfiles
 | waybar hyprland/workspaces | waybar `niri/workspaces` |
 | waybar hyprland/window | waybar `niri/window` |
 
-### 重叠策略 —— 你的配置优先
+### 软件选型
 
-与朋友配置重叠处，保留你的选择：
+本配置在相关软件上作出的选择如下：
 
-- **终端**：kitty（朋友用 alacritty）
-- **Shell**：fish（朋友用 zsh）
-- **通知**：dunst（朋友用 mako）
-- **启动器/注销**：wofi、wlogout（你的样式）
-- **编辑器**：你的 nvim 配置（AstroNvim）
-- **文件管理器**：dolphin（`kdePackages.dolphin`；朋友用 nautilus）
+- **终端**：kitty
+- **Shell**：fish
+- **通知**：dunst
+- **启动器/注销**：wofi、wlogout
+- **编辑器**：nvim（AstroNvim 配置）
+- **文件管理器**：dolphin（`kdePackages.dolphin`）
 - **光标/主题**：catppuccin-macchiato-lavender-cursors、Catppuccin Macchiato
-- **圆角**：约 8px 偏方角（你的偏好），经 `windowrule.kdl` 的
-  `geometry-corner-radius 8` 应用
+- **圆角**：约 8px 偏方角，经 `windowrule.kdl` 的 `geometry-corner-radius 8` 应用
 
-### 明确未迁移的内容
+### 未纳入的软件
 
-- **朋友的 zsh / mako / alacritty / vscode / zed / opencode / 外接屏 kanshi**
-  —— 换成你的等价物或丢弃
-- **Steam / Minecraft / Android Studio / Waydroid** —— 参考仓库的游戏/安卓
-  模块丢弃（不在你的配置里）
-- **v2raya 代理服务** —— 从基础模块移除（如需可加回
-  `modules/software/system/main.nix`）
+- **zsh / mako / alacritty / vscode / zed / opencode / 外接屏 kanshi**
+  —— 未采用（分别由 fish、dunst、kitty 等替代，或暂不需要）
+- **Steam / Minecraft / Android Studio / Waydroid** —— 游戏与安卓相关模块
+  未纳入本配置
+- **v2raya 代理服务** —— 未启用（如需可加回 `modules/software/system/main.nix`）
 
 ---
 
 ## 四、特性说明
 
+### Shell（fish + oh-my-posh）
+- 默认 shell 为 fish；提示符由 **oh-my-posh** 渲染，主题基于 clean-detailed
+  定制为 Catppuccin Macchiato 配色。
+- 提示符显示：完整路径、Git 分支状态、上一条命令退出码（成功 `✔`，失败显示
+  错误码）、执行耗时、以及当前项目所用编程语言（Python/Node/Go/Rust 自动检测）。
+- fish 插件通过 home-manager **声明式管理**（`programs.fish.plugins`，来自
+  nixpkgs 内置 fishPlugins）：fzf-fish（Ctrl+R 历史搜索）、done（长命令完成
+  通知）、forgit（git+fzf 交互）、colored-man-pages。
+- 辅助工具：fzf、fd、bat、eza、zoxide（智能 `z`）、ripgrep、tldr。
+- 说明：NixOS 下**不推荐 fisher**——它会在运行时改写 `~/.config/fish`，破坏
+  声明式与可复现性；改用 home-manager 声明式插件即可达到同样效果。
+
+
+
 ### 登录
-`modules/software/desktop/greetd.nix` 通过 `tuigreet` 显示**密码登录**，
-无自动登录（安全考虑）。
+`modules/software/desktop/greetd.nix` 通过 `tuigreet`（终端式登录管理器）
+显示**密码登录**，无自动登录（安全考虑）。tuigreet 为纯文本界面，不会出现
+刺眼的图形登录背景；原 Hyprland 环境使用的 regreet 图形主题未迁移。
 
 ### 永不熄屏
 `home-manager/desktop/swayidle/default.nix` **无闲置超时**——屏幕从不自动
@@ -261,9 +274,8 @@ nix flake check --flake /etc/nixos#thinkbook   # 或
 nixos-rebuild build --flake /etc/nixos#thinkbook
 ```
 
-版本锁定严格：`flake.lock` 锁定与参考仓库相同的精确 rev（`nixpkgs`
-`2fcb964de67f`、home-manager `99e84ee7387f`），经验证可共同求值/构建。
-不要未经测试就升级 inputs。
+`flake.lock` 已锁定依赖的精确版本（`nixpkgs` rev `2fcb964de67f`、
+home-manager rev `99e84ee7387f`），确保构建可复现；升级 inputs 前请先验证。
 
 ---
 
@@ -273,6 +285,5 @@ nixos-rebuild build --flake /etc/nixos#thinkbook
 
 ---
 
-- [`USAGE.md`](./USAGE.md) —— 中文使用指南（日常命令、装软件、故障排查）
-- [`VM-TEST.md`](./VM-TEST.md) —— VirtualBox 虚拟机试装指南
-- 参考仓库：`../nixos`（朋友的原配置）
+- 《使用指南》(USAGE.md)：日常命令、软件管理、故障排查等中文说明。
+- 《VirtualBox 试装指南》(VM-TEST.md)：在虚拟机中先行验证本配置的完整流程。

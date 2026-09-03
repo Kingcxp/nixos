@@ -155,10 +155,19 @@ nix shell nixpkgs#ripgrep nixpkgs#fd
 
 ## 6. 常用软件的中文使用要点
 
-### fish（shell）
-- 配置在 `home-manager/fish.nix`，别名在 `shellInit` 里（如 `update`）
-- 补全、语法高亮、历史搜索默认开启
-- 想加别名/环境变量，编辑 `fish.nix` 后 `update`
+### fish（shell + oh-my-posh）
+- 配置在 `home-manager/fish.nix`；提示符由 **oh-my-posh** 渲染，主题为
+  Catppuccin Macchiato 配色的 clean-detailed 定制版。
+- 提示符信息：完整路径、Git 分支、退出码（成功 `✔`，失败显示错误码）、
+  执行耗时、当前项目语言（Python/Node/Go/Rust 自动检测）。
+- 插件**声明式管理**（`programs.fish.plugins`，来自 nixpkgs fishPlugins）：
+  fzf-fish（Ctrl+R 历史搜索）、done（长命令完成通知）、forgit、colored-man-pages。
+- 辅助工具：fzf、fd、bat、eza、zoxide（`z` 智能跳转）、ripgrep、tldr。
+- 想加别名/环境变量，编辑 `fish.nix` 的 `shellInit` 后 `update`。
+- **关于 fisher**：NixOS 上不推荐用 fisher。fisher 会在运行时改写
+  `~/.config/fish`，与 Nix 的声明式、可复现理念冲突；home-manager 的
+  `programs.fish.plugins` 已能声明式安装同样插件（升级、回滚随系统走）。
+  在 Arch 等传统发行版上使用 fisher 则是正常的。
 
 ### nvim（AstroNvim）
 - 配置在 `home-manager/nvim/config/`（你的原配置，插件由 lazy.nvim 自动安装）
