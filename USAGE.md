@@ -196,7 +196,7 @@ sudo nix flake update
 sudo nixos-rebuild switch --flake /etc/nixos#thinkbook
 ```
 
-> 本仓库的 `flake.lock` 锁定了与参考仓库相同的版本，**经过验证可一起构建**。
+> 本仓库的 `flake.lock` 锁定了精确版本，**经过验证可一起构建**。
 > 升级前建议 `sudo nixos-rebuild dry-run` 先看结果；遇错可回滚（见下）。
 
 ---
@@ -266,6 +266,6 @@ Nix 会拉取该软件的所有依赖（严格隔离、不共享系统库），�
 - NixOS 官方手册（推荐慢慢读）：<https://nixos.org/manual/nixos/stable/>
 - 包搜索：<https://search.nixos.org/packages>
 - 选项搜索（找配置项怎么写）：<https://search.nixos.org/options>
-- 本项目的参考仓库（原作者的 nixos 配置）:`../nixos`
+- NixOS 官方手册与包搜索：<https://nixos.org/manual/nixos/stable/>、<https://search.nixos.org/packages>
 
 开始上手：改一个配置 → `update` → 观察效果。错了就 `rollback`，NixOS 最不怕折腾。
