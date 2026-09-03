@@ -108,17 +108,30 @@ cp -r /mnt/host-repo /tmp/nixos_kingcq
 
 > 若 `vboxsf` 模块不在 live 里，先 `sudo modprobe vboxsf`。
 
-## 6. 复制仓库进 /mnt 并安装
+## 6. 复制仓库进 /mnt 并安装（用 `thinkbook-vm` 变体）
+
+本 flake 提供专用的 VM 变体主机 **`thinkbook-vm`**：GRUB 目标盘自动为
+`/dev/sda`、niri 自动检测输出（无需手改 output.kdl）、内置 VirtualBox
+Guest Additions（含 mount.vboxsf 内核不匹配的修复）：
 
 ```bash
 sudo cp -r /tmp/nixos_kingcq /mnt/nixos_kingcq
 cd /mnt/nixos_kingcq
-sudo nixos-install --flake .#thinkbook
+sudo nixos-install --flake .#thinkbook-vm
 ```
 
-> **主机名仍是 `thinkbook`**，虚拟机里也用它，不影响。装完想区分可
-> 改 `hosts/thinkbook/default.nix` 里的 `networking.hostName`，但这是
-> 共享文件，真机装时记得改回来。
+> 主机名仍是 `thinkbook`（networking.hostName），不影响使用。
+
+## 6b. 已装系统的仓库更新（git pull 之后）
+
+VM 里更新仓库后直接用 `thinkbook-vm` 重建：
+
+```bash
+sudo nixos-rebuild switch --flake /etc/nixos#thinkbook-vm
+```
+
+**不再需要**手工给 hardware-configuration.nix 追加 `grub.device`、
+改 output.kdl 或删 guest.enable——变体主机全部内置。
 
 ## 7. 设置密码并重启
 
