@@ -20,6 +20,8 @@
     nix-alien.url = "github:thiagokokada/nix-alien";
     omp-nix.url = "github:yuxqiu/omp-nix";
     omp-nix.inputs.nixpkgs.follows = "nixpkgs";
+    catppuccin.url = "github:catppuccin/nix";
+    catppuccin.inputs.nixpkgs.follows = "nixpkgs";
     x1e-nixos-config.url = "github:kuruczgy/x1e-nixos-config";
     x1e-nixos-config.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -31,6 +33,7 @@
       home-manager,
       nix-alien,
       omp-nix,
+      catppuccin,
       x1e-nixos-config,
       ...
     }@inputs:
@@ -71,6 +74,7 @@
                   home-manager.useUserPackages = true;
                   home-manager.backupFileExtension = "hm.bak";
                   home-manager.extraSpecialArgs = inputs // specialArgs;
+                  home-manager.sharedModules = [ catppuccin.homeManagerModules.default ];
                   home-manager.users.${username} = {
                     imports = homeModules;
                   };
@@ -88,6 +92,7 @@
           system = "x86_64-linux";
           hostModule = ./hosts/thinkbook;
           homeModules = [ ./hm-profile/niri-desktop.nix ];
+          extraModules = [ catppuccin.nixosModules.default ];
           extraSpecialArgs = {
             alien-pkgs = nix-alien.packages.x86_64-linux;
             omp-pkgs = omp-nix.packages.x86_64-linux;

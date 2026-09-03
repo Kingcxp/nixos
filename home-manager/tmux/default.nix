@@ -10,7 +10,7 @@
       set -g mouse on
       set -g default-terminal "tmux-256color"
 
-      set -g @catppuccin_flavor "mocha"
+      set -g @catppuccin_flavor "macchiato"
       set -g @catppuccin_window_status_style "rounded"
 
       set -g status-right-length 100
