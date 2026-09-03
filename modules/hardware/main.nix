@@ -16,8 +16,8 @@
   # autoEnable 会自动接入支持的端口（GRUB 主题、指针、dunst、waybar、
   # wlogout、yazi、fish、fcitx5、tty 等 NixOS/home-manager 层）
   catppuccin = {
-    enable = lib.mkDefault true;
-    autoEnable = lib.mkDefault true;
+    enable = true;
+    autoEnable = true;
     flavor = lib.mkDefault "macchiato";
     accent = lib.mkDefault "lavender";
   };

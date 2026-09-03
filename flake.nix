@@ -74,7 +74,7 @@
                   home-manager.useUserPackages = true;
                   home-manager.backupFileExtension = "hm.bak";
                   home-manager.extraSpecialArgs = inputs // specialArgs;
-                  home-manager.sharedModules = [ catppuccin.homeManagerModules.default ];
+                  home-manager.sharedModules = [ catppuccin.homeModules.default ];
                   home-manager.users.${username} = {
                     imports = homeModules;
                   };
