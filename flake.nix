@@ -47,6 +47,7 @@
           homeModules ? [ ],
           extraSpecialArgs ? { },
           extraModules ? [ ],
+          isVM ? false,
         }:
         let
           specialArgs = {
@@ -55,6 +56,7 @@
               username
               system
               inputs
+              isVM
               ;
           }
           // extraSpecialArgs;
@@ -94,6 +96,27 @@
           homeModules = [ ./hm-profile/niri-desktop.nix ];
           extraModules = [ catppuccin.nixosModules.default ];
           extraSpecialArgs = {
+            alien-pkgs = nix-alien.packages.x86_64-linux;
+            omp-pkgs = omp-nix.packages.x86_64-linux;
+          };
+        };
+
+        # VirtualBox 试装变体：BIOS GRUB 目标盘 /dev/sda、niri 自动检测输出。
+        # hardware-configuration.nix 用 VM 内 nixos-generate-config 的产物
+        # （含自动的 virtualbox guest.enable，经 modules/hardware/virtualbox-guest.nix 修复可构建）。
+        thinkbook-vm = mkHost {
+          system = "x86_64-linux";
+          hostModule = ./hosts/thinkbook;
+          homeModules = [ ./hm-profile/niri-desktop.nix ];
+          extraModules = [
+            catppuccin.nixosModules.default
+            {
+              boot.loader.grub.device = "/dev/sda";
+              virtualisation.virtualbox.guest.enable = true;
+            }
+          ];
+          extraSpecialArgs = {
+            isVM = true;
             alien-pkgs = nix-alien.packages.x86_64-linux;
             omp-pkgs = omp-nix.packages.x86_64-linux;
           };
