@@ -142,6 +142,27 @@ sudo reboot
 
 ## 8. 虚拟机里可能遇到的小问题
 
+### 已验证：本配置在 VirtualBox 完整试装通过
+
+2026-09 在 VirtualBox 7.2 (BIOS + VMSVGA) 实测全流程：
+`nixos-install --flake .#thinkbook-vm` → 重启 → tuigreet → 登录
+kingcq → niri 桌面（waybar/壁纸/指针全部正常渲染）。
+
+实测发现的坑与解法（`thinkbook-vm` 变体已内置）：
+
+1. **必须开启 3D 加速**（设置 → 显示 → 勾选"启用 3D 加速"）——否则 niri
+   启动后只有深蓝空屏：日志报 `software EGL renderers are skipped` +
+   `no allocator available for device`（wlroots 拿不到 GBM 渲染器）。
+2. **40G 磁盘不够**：完整系统闭包约 28G+，构建期间再加临时空间会写满
+   （表现为一堆 fish-completions/libdbm 等小构建报 `exit code 1`，日志提示
+   "lack of free disk space"）。**磁盘给 60G**，或装不下时先删 swapfile 清空间。
+3. **内存 6–8G**：4G 下 nix 构建 OOM 被 kill；宿主机内存紧张时用 6G + 8G swapfile。
+4. **26.05 ISO 的 hv_* 模块**：`systemd-modules-load` 尝试加载 Hyper-V 模块
+   （hv_vmbus/hv_netvsc）失败会把 live 环境打进 emergency mode——Ctrl-D
+   继续引导即可，不影响安装。
+5. **重启后从 ISO 引导**：安装完记得在存储设置里移除 ISO（或改启动顺序硬盘优先），
+   否则又进安装器。
+
 ### niri 桌面黑屏 / 显示器不对
 
 本仓库 `home-manager/desktop/niri/config/output.kdl` 写死了 `eDP-1`，
