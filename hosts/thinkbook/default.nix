@@ -15,6 +15,7 @@
     ../../modules/hardware
 
     ../../modules/software/system/main.nix
+    ../../modules/software/develop
 
     ../../modules/software/desktop/greetd.nix
     ../../modules/software/desktop/niri.nix
