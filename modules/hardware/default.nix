@@ -8,6 +8,7 @@
 {
   imports = [
     ./main.nix
+    ./virtualbox-guest.nix
     ./network.nix
     ./input.nix
     ./bluetooth.nix
