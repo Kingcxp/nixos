@@ -38,6 +38,7 @@
     noto-fonts-color-emoji
     jetbrains-mono
     nerd-fonts.jetbrains-mono
+    font-awesome # waybar 的 U+F5xx/U+F6xx 图标（NF v3 已移除这批旧 FA 字形）
   ];
   fonts.fontconfig.defaultFonts = {
     sansSerif = [
