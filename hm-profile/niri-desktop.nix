@@ -14,6 +14,7 @@
     ../home-manager/powertop
     ../home-manager/vscode
     ../home-manager/jetbrains
+    ../home-manager/fcitx5
 
     ../home-manager/desktop/niri
     ../home-manager/desktop/waybar
