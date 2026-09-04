@@ -11,6 +11,28 @@
   hardware.intel-gpu-tools.enable = lib.mkDefault true;
   services.thermald.enable = lib.mkDefault true;
 
+  # Intel Tiger Lake iGPU：硬件视频解码/编码（VA-API，英伟达无独显）
+  environment.systemPackages = with pkgs; [
+    intel-media-driver # Broadwell+ 的 VA-API 驱动（浏览器/播放器硬解）
+    libva-utils        # vainfo 验证
+    vulkan-tools       # vkcube/vulkaninfo
+    mesa-demos         # glxinfo
+    fwupd              # 固件更新（BIOS/SSD/Thunderbolt）
+  ];
+  # VA-API 环境变量（iHD 驱动）
+  environment.sessionVariables.LIBVA_DRIVER_NAME = "iHD";
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true; # 32 位应用（Steam/部分游戏）的硬解
+    extraPackages = with pkgs; [
+      intel-media-driver
+      vpl-gpu-rt # QuickSync（Tiger Lake 用 intel-media-driver 即可，此包备用）
+    ];
+  };
+
+  # 固件更新服务
+  services.fwupd.enable = lib.mkDefault true;
+
   # Power management + battery conservation (ThinkBook)
   powerManagement.enable = true;
   services.tlp = {
