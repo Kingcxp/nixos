@@ -1,7 +1,13 @@
 // Layout: gaps and column behavior (user prefers 8px-ish, square-ish corners
 // are handled via windowrule geometry-corner-radius).
 layout {
-    gaps 4
+    gaps 2
+    struts {
+        left 1
+        right 1
+        top 1
+        bottom 1
+    }
 
     center-focused-column "never"
 

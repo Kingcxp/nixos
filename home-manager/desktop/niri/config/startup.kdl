@@ -1,4 +1,5 @@
 // Startup commands — mirrors user's Hyprland exec-once autostart
+spawn-at-startup "kitty"
 spawn-at-startup "waybar"
 spawn-at-startup "nm-applet"
 spawn-at-startup "blueman-applet"

@@ -8,7 +8,31 @@ cursor {
 }
 
 animations {
-    // defaults
+    // 对齐 myconfig Hyprland 动画：
+    // - hyprland windows windowsIn/Out = popin 87% ≈ niri window-open 默认缩放展开
+    // - hyprland workspaces = almostLinear + fade → niri workspace-switch 用短时 expo
+    //   （niri 无 fade kind，快速切换观感接近）
+    window-open {
+        duration-ms 150
+        curve "ease-out-expo"
+    }
+    window-close {
+        duration-ms 100
+        curve "ease-out-expo"
+    }
+    window-movement {
+        spring damping-ratio=1.0 stiffness=800 epsilon=0.0001
+    }
+    workspace-switch {
+        duration-ms 150
+        curve "ease-out-expo"
+    }
+    horizontal-view-movement {
+        spring damping-ratio=1.0 stiffness=800 epsilon=0.0001
+    }
+    window-resize {
+        spring damping-ratio=1.0 stiffness=800 epsilon=0.0001
+    }
 }
 
 overview {

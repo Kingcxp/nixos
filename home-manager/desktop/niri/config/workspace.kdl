@@ -1,4 +1,12 @@
-// Named workspaces — waybar shows these as icons
-workspace "web"
-workspace "code"
-workspace "chat"
+// Named workspaces 1-10 — 等效 Hyprland 的 persistent workspaces
+// (waybar niri/workspaces all-outputs=true 显示全部)
+workspace "1"
+workspace "2"
+workspace "3"
+workspace "4"
+workspace "5"
+workspace "6"
+workspace "7"
+workspace "8"
+workspace "9"
+workspace "10"

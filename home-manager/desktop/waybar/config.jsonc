@@ -20,16 +20,12 @@
   ],
   "niri/workspaces": {
     "format": "{name}",
-    "format-icons": {
-      "web": "󰈹",
-      "code": "⌨",
-      "chat": "󰭻"
-    },
+    "all-outputs": true,
     "on-scroll-up": "niri msg action focus-workspace-up",
     "on-scroll-down": "niri msg action focus-workspace-down"
   },
   "niri/window": {
-    "format": " {title}",
+    "format": "\uf061 {title}",
     "separate-outputs": true
   },
   "tray": {
