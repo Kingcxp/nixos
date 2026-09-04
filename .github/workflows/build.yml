@@ -11,6 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # GH runner 磁盘有限（约 21G 可用），本闭包 ~28G：先清掉不用的巨型工具链
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune -af || true
+          df -h /
+
       # 安装 Nix（含 flakes）。Nix 构建是 hermetic 的：
       # toplevel 闭包在任何宿主上构建产物一致，等价于真实 NixOS 环境构建。
       - uses: cachix/install-nix-action@v30
@@ -27,4 +34,6 @@ jobs:
       # 真实构建整个系统闭包（内核、initrd、sudoers、全部软件）。
       # 抓 build 期错误，如 sudoers visudo 语法错误（flake check 抓不到）。
       - name: Build system toplevel
-        run: nix build .#nixosConfigurations.thinkbook.config.system.build.toplevel --accept-flake-config
+        run: |
+          nix build .#nixosConfigurations.thinkbook.config.system.build.toplevel --accept-flake-config --print-build-logs 2>&1 | tee build.log
+          df -h / | tail -1

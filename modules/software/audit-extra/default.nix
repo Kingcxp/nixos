@@ -25,8 +25,9 @@
     # ---------- 网络工具 / 远程 ----------
     sqlitebrowser
     pavucontrol # 音量控制
-    rustdesk # 远程桌面
+    todesk # 远程桌面（nixpkgs 有官方包）
     wemeet # 腾讯会议
+    microsoft-edge # 备用浏览器（unfree）
     clash-verge-rev # 代理客户端（unfree）
     netease-cloud-music-gtk # 网易云音乐（AUR 原版的 GTK 复刻）
     virt-manager # 虚拟机管理（替代 VirtualBox GUI 用途）
@@ -51,10 +52,36 @@
 
     # ---------- Minecraft 启动器 ----------
     hmcl
+
+    # ---------- oh-my-pi（omp.sh 编码 agent，can1357/oh-my-pi 官方二进制） ----------
+    (pkgs.stdenv.mkDerivation {
+      pname = "oh-my-pi";
+      version = "18.1.10";
+      src = pkgs.fetchurl {
+        url = "https://github.com/can1357/oh-my-pi/releases/download/v18.1.10/omp-linux-x64";
+        sha256 = "sha256-6R1VmO5H4dQJn9hobcn2HJt1Xy6gd9Xxd0q6EHIyH54=";
+      };
+      dontUnpack = true;
+      installPhase = ''
+        mkdir -p $out/bin
+        cp $src $out/bin/omp
+        chmod +x $out/bin/omp
+      '';
+      meta.platforms = [ "x86_64-linux" ];
+    })
   ];
 
   # Godot + .NET
   environment.variables.DOTNET_ROOT = "${pkgs.dotnet-sdk}";
+
+  # Homebrew on Linux：官方支持 /home/linuxbrew（brew 自更新，不走 nix）
+  # 首次 rebuild 时自动执行官方 installer（幂等：已装则跳过）
+  system.activationScripts.homebrew = lib.stringAfter [ "etc" ] ''
+    if [ ! -d /home/linuxbrew/.linuxbrew ] && [ ! -f /home/linuxbrew/.linuxbrew/bin/brew ]; then
+      mkdir -p /home/linuxbrew
+      ${pkgs.curl}/bin/curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | ${pkgs.bash}/bin/bash -s -- --non-interactive || true
+    fi
+  '';
 
   # Steam（unfree，wlroots/niri 下经 gamescope 或直接跑）
   programs.steam = {
@@ -74,6 +101,8 @@
       "steam"
       "steam-unwrapped"
       "wemeet"
+      "zoom"
       "hmcl"
+      "microsoft-edge"
     ];
 }
