@@ -15,7 +15,12 @@ layout {
         proportion 0.25
         proportion 0.5
         proportion 0.75
+        proportion 1.0
     }
 
-    default-column-width { proportion 0.5; }
+    // 新窗口默认占满可用宽度（对齐 Hyprland dwindle 首窗满屏的观感）；
+    // 多窗口并排用 Mod+R 切换预设宽度
+    default-column-width {
+        proportion 1.0
+    }
 }
