@@ -35,6 +35,29 @@
     vulkan-tools # vkcube/vulkaninfo
     libva-utils # vainfo（Intel 视频加速验证）
 
+    # ---------- 系统维护 / 关键时刻工具 ----------
+    gparted # 图形分区编辑
+    gnome-disk-utility # GNOME 磁盘（分区/格式化/镜像写入/SMART）
+    woeusb # Windows ISO → U 盘（rufus 的 Linux 等价物；ventoy 被 nixpkgs 标记
+    #   insecure（二进制 blob），未纳入，如需：nixpkgs.config.permittedInsecurePackages）
+    usbimager # 简洁的镜像写入工具
+    unetbootin # 多发行版 U 盘制作
+    testdisk # 分区表/数据恢复
+    ddrescue # 磁盘镜像救援
+    smartmontools # smartctl 磁盘健康
+    nvme-cli # NVMe 管理
+    hdparm # 磁盘参数
+    cryptsetup # LUKS 加密卷
+    timeshift # 系统快照/还原
+    parted # 命令行分区
+
+    # ---------- 磁盘空间分析（SpaceSniffer 类） ----------
+    qdirstat # SpaceSniffer 的 Qt 复刻（树状图）
+    baobab # GNOME 磁盘用量分析
+    ncdu # 终端磁盘用量（TUI）
+    dust # 终端磁盘用量（rust，快速）
+    duf # df 的现代替代
+
     # ---------- 命令行 ----------
     unrar
     vim
