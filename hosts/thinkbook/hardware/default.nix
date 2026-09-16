@@ -11,6 +11,9 @@
   hardware.intel-gpu-tools.enable = lib.mkDefault true;
   services.thermald.enable = lib.mkDefault true;
 
+  # 固件：Intel Tiger Lake 音频 DSP（sof-firmware，扬声器/麦克风必需）
+  hardware.firmware = with pkgs; [ sof-firmware ];
+
   # Intel Tiger Lake iGPU：硬件视频解码/编码（VA-API，英伟达无独显）
   environment.systemPackages = with pkgs; [
     intel-media-driver # Broadwell+ 的 VA-API 驱动（浏览器/播放器硬解）
