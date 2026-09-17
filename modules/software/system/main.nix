@@ -25,10 +25,25 @@
   security.sudo.enable = true;
   security.sudo.wheelNeedsPassword = true;
 
-  # git
+  # git（对齐本机 ~/.gitconfig，并按要求开启提交签名）
   programs.git = {
     enable = true;
     lfs.enable = true;
+    config = {
+      user.name = "Kingcq";
+      user.email = "404291187@qq.com";
+      init.defaultBranch = "main";
+      # 保留登录凭据（~/.git-credentials），无需重复输入
+      credential.helper = "store";
+      # SSH 方式签名提交（密钥：~/.ssh/id_ed25519）
+      commit.gpgsign = true;
+      gpg.format = "ssh";
+      user.signingkey = "~/.ssh/id_ed25519.pub";
+      # 合并策略：merge（不 rebase）
+      pull.rebase = false;
+      merge.ff = true;
+      push.autoSetupRemote = true;
+    };
   };
 
   # Shell

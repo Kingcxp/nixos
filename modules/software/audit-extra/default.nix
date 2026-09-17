@@ -51,6 +51,11 @@
     timeshift # 系统快照/还原
     parted # 命令行分区
 
+    # ---------- TUI SQL 客户端（SQLite，可编辑行） ----------
+    lazysql # TUI 数据库管理（SQLite/PG/MySQL，支持行编辑）
+    visidata # TUI 表格多面手（可直接编辑 SQLite 单元格并写回）
+    harlequin # 终端 SQL IDE（SQLite/DuckDB 等）
+
     # ---------- 磁盘空间分析（SpaceSniffer 类） ----------
     qdirstat # SpaceSniffer 的 Qt 复刻（树状图）
     baobab # GNOME 磁盘用量分析
