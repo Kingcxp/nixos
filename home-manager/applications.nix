@@ -42,6 +42,17 @@
     comment = "QQ for Linux";
   };
 
+  # Clash Verge Rev（代理客户端）：不随会话自动启动。
+  # 用 XDG autostart 的 Hidden=true 显式屏蔽（即使应用内开启"开机自启"也无效），
+  # 需要时手动 `clash-verge` 启动。
+  xdg.configFile."autostart/clash-verge.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Clash Verge
+    Exec=clash-verge
+    Hidden=true
+  '';
+
   # Default applications — user prefers Dolphin + Firefox
   xdg.mimeApps = {
     enable = true;
