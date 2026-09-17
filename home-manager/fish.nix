@@ -39,44 +39,44 @@
 
     # 自动更新脚本（需要自更新的软件：NixOS 系统走 flake update，
     # Homebrew 与 oh-my-pi 二进制由脚本拉取最新版；API 稳定、无破坏性变更）
+    # 自动更新脚本（需要自更新的软件：NixOS 系统走 flake update，
+    # Homebrew 与 oh-my-pi 二进制由脚本拉取最新版；API 稳定、无破坏性变更）
+    # 注意：home-manager 会自动包一层 function 定义，这里只写函数体。
     functions = {
       # 一次更新全部：仓库 → flake inputs → 系统 → Homebrew
       update-all = ''
-        function update-all --description "更新系统配置、flake inputs、Homebrew"
-          set -l host thinkbook
-          if systemd-detect-virt --vm --quiet
-            set host thinkbook-vm
-          end
-
-          echo "→ 拉取仓库最新配置..."
-          git -C ~/nixos pull --ff-only; or return 1
-
-          echo "→ 更新 flake inputs（nixpkgs 等）..."
-          nix flake update --flake ~/nixos
-
-          echo "→ 重建系统（目标：$host）..."
-          sudo nixos-rebuild switch --flake /etc/nixos#$host; or return 1
-
-          if type -q brew
-            echo "→ 更新 Homebrew..."
-            brew update; and brew upgrade
-          end
-
-          echo "✓ 全部更新完成"
+        # 自动识别运行环境：VM 用 thinkbook-vm，真机用 thinkbook
+        set -l host thinkbook
+        if systemd-detect-virt --vm --quiet
+          set host thinkbook-vm
         end
+
+        echo "→ 拉取仓库最新配置..."
+        git -C ~/nixos pull --ff-only; or return 1
+
+        echo "→ 更新 flake inputs（nixpkgs 等）..."
+        nix flake update --flake ~/nixos
+
+        echo "→ 重建系统（目标：$host）..."
+        sudo nixos-rebuild switch --flake /etc/nixos#$host; or return 1
+
+        if type -q brew
+          echo "→ 更新 Homebrew..."
+          brew update; and brew upgrade
+        end
+
+        echo "✓ 全部更新完成"
       '';
 
-      # 单独更新 oh-my-pi（上游二进制，Nix 包固定版本故需脚本拉最新）
+      # 单独更新 oh-my-pi（上游二进制；Nix 包固定版本故需脚本拉最新）
       update-omp = ''
-        function update-omp --description "拉取 oh-my-pi 最新二进制到 ~/.local/bin"
-          mkdir -p ~/.local/bin
-          echo "→ 下载 omp 最新版..."
-          curl -fL --progress-bar \
-            https://github.com/can1357/oh-my-pi/releases/latest/download/omp-linux-x64 \
-            -o ~/.local/bin/omp; or return 1
-          chmod +x ~/.local/bin/omp
-          echo "✓ omp 已更新："(~/.local/bin/omp --version 2>/dev/null; or echo ok)
-        end
+        mkdir -p ~/.local/bin
+        echo "→ 下载 omp 最新版..."
+        curl -fL --progress-bar \
+          https://github.com/can1357/oh-my-pi/releases/latest/download/omp-linux-x64 \
+          -o ~/.local/bin/omp; or return 1
+        chmod +x ~/.local/bin/omp
+        echo "✓ omp 已更新"
       '';
     };
 
