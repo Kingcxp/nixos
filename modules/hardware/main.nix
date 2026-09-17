@@ -25,7 +25,9 @@
   # Kernel
   boot.kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
 
-  # NTFS
+  # 文件系统工具：btrfs（真机根分区用 btrfs 子卷，需 btrfs-progs）
+  boot.supportedFilesystems.btrfs = lib.mkDefault true;
+  # NTFS（Windows 移动硬盘读挂载）
   boot.supportedFilesystems.ntfs = lib.mkDefault true;
 
   # Firmware
