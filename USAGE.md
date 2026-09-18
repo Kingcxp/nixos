@@ -200,15 +200,50 @@ passwd    # 修改当前用户密码
 
 ## 7. 升级系统（更新包）
 
+### 推荐：一条命令搞定全部更新
+
 ```bash
-# 用 flake.lock 锁定的旧版本升级（不改变 lock）
+nixos update          # 列出所有可更新项 → 询问确认 → 全部更新
+nixos update -y       # 同上，但不询问（一键）
+nixos update -l       # 只列出可更新项，不执行
+nixos update -i       # 用 fzf 多选要更新的组件（像 paru 那样挑范围）
+nixos update brew     # 只更新 Homebrew 包
+nixos update nixpkgs  # 只更新某个 flake input（系统部分）
+nixos update firmware # 只更新固件
+```
+
+会检查并更新的内容：
+
+| 组件 | 说明 |
+| --- | --- |
+| `flake` | 全部 flake inputs（nixpkgs 等），随后自动重建系统 |
+| `<input名>` | 单个 flake input：`nixpkgs` / `home-manager` / `catppuccin` / `omp-nix` / `nix-alien` / `x1e-nixos-config` |
+| `brew` | Homebrew 包（`brew outdated` → `brew upgrade`） |
+| `omp` | oh-my-pi 二进制（上游 release 最新版） |
+| `firmware` | 固件（fwupd；BIOS 类更新重启后生效） |
+
+镜像策略：命令会先探测 cernet 镜像，可达就用它（大陆快），不可达自动改用官方源。
+
+### 手动方式（等价）
+
+```bash
+# 只按当前 flake.lock 重建（不更新版本）
 sudo nixos-rebuild switch --flake /etc/nixos#thinkbook
 
-# 更新 lock（拉取 nixpkgs 最新）再升级
-cd /etc/nixos
-sudo nix flake update
+# 更新全部 inputs 再重建
+cd /etc/nixos && nix flake update
+sudo nixos-rebuild switch --flake /etc/nixos#thinkbook
+
+# 只更新某一个 input
+nix flake update nixpkgs
 sudo nixos-rebuild switch --flake /etc/nixos#thinkbook
 ```
+
+### 其它自动更新（无需手动干预）
+
+- **固件**：`fwupd-refresh.timer` 每小时刷新元数据；`fwupd-auto-update.timer` 每周自动安装（`journalctl -u fwupd-auto-update` 可回看）
+- **驱动**：随 nixpkgs 走 —— `nixos update` 里更新 nixpkgs = 驱动更新
+- **手动查固件**：`fwupdate`
 
 > 本仓库的 `flake.lock` 锁定了精确版本，**经过验证可一起构建**。
 > 升级前建议 `sudo nixos-rebuild dry-run` 先看结果；遇错可回滚（见下）。

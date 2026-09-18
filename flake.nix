@@ -4,14 +4,13 @@
   # Vendored flake.lock pins a verified, buildable version set of all inputs.
   # nix-community cache is used for extra packages (nix-alien, omp-nix, etc.).
   nixConfig = {
-    # 二进制缓存：cache.nixos.org 为 Nix 默认源（实测本网络最快，~265KB/s），
-    # 这里只追加必需的社区缓存。cernet 镜像访问不稳定，已移除。
-    #
-    # 若某天官方源变慢，可改用以下任一镜像（实测可用）：
-    #   "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"   （~51KB/s）
-    #   "https://mirrors.ustc.edu.cn/nix-channels/store"            （~29KB/s）
+    # 二进制缓存（按顺序尝试，前一个不可达会自动回退到下一个）：
+    #   1. cernet（大陆主力源，校园网/国内速度最好）
+    #   2. cache.nixos.org（Nix 内置官方源，始终兜底）
+    #   3. nix-community.cachix.org（nix-alien / omp-nix 等包必需）
     extra-substituters = [
-      "https://nix-community.cachix.org" # nix-alien / omp-nix 等包
+      "https://mirrors.cernet.edu.cn/nix-channels/store"
+      "https://nix-community.cachix.org"
     ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
