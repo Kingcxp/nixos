@@ -33,8 +33,44 @@
     ];
   };
 
-  # 固件更新服务
+  # 固件更新（BIOS/SSD/Thunderbolt/外设）
+  # - fwupd 自带的 fwupd-refresh.timer 每小时刷新 LVFS 元数据（NixOS 模块已启用）
+  # - 下面再加一个每周"自动安装"定时器：装完的 UEFI/BIOS 胶囊更新在下次重启时生效
   services.fwupd.enable = lib.mkDefault true;
+
+  systemd.services.fwupd-auto-update = {
+    description = "自动安装可用的固件更新（fwupd）";
+    wants = [ "network-online.target" ];
+    after = [
+      "network-online.target"
+      "fwupd.service"
+    ];
+    requires = [ "fwupd.service" ];
+    path = [ pkgs.fwupd ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "fwupd-auto-update" ''
+        set -u
+        echo "=== $(date -Is) 检查固件更新 ==="
+        fwupdmgr refresh --force || true
+        fwupdmgr get-updates || true
+        # -y 自动确认；--no-reboot-check 不阻塞等待重启确认，
+        # 需要重启生效的胶囊更新会在下次开机自动应用
+        fwupdmgr update -y --no-reboot-check || true
+        echo "=== 完成（journalctl -u fwupd-auto-update 可回看） ==="
+      '';
+    };
+  };
+
+  systemd.timers.fwupd-auto-update = {
+    description = "每周自动安装固件更新";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "weekly";
+      Persistent = true; # 关机错过也补跑
+      RandomizedDelaySec = "1h";
+    };
+  };
 
   # Power management + battery conservation (ThinkBook)
   powerManagement.enable = true;

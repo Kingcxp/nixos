@@ -68,6 +68,16 @@
         echo "✓ 全部更新完成"
       '';
 
+      # 手动检查/安装固件更新（自动更新见 systemd timer fwupd-auto-update）
+      fwupdate = ''
+        echo "→ 刷新固件元数据..."
+        fwupdmgr refresh --force
+        echo "→ 可用更新："
+        fwupdmgr get-updates
+        echo "→ 安装更新（BIOS 类更新重启后生效）："
+        fwupdmgr update
+      '';
+
       # 单独更新 oh-my-pi（上游二进制；Nix 包固定版本故需脚本拉最新）
       update-omp = ''
         mkdir -p ~/.local/bin
