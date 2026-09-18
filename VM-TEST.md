@@ -162,6 +162,28 @@ niri::backend::tty: error adding primary node device ... no allocator available
 live 环境启动时 `systemd-modules-load` 会尝试加载 Hyper-V 驱动失败，进入
 emergency mode：**按回车进维护 shell，或用 Ctrl-D 继续引导**，不影响安装。
 
+### live 环境 DNS 解析失败（实测遇到）
+
+如果安装极慢、反复出现：
+
+```
+warning: unable to download 'https://cache.nixos.org/nar/....nar.zst':
+  Timeout was reached ... Less than 1 bytes/sec transferred
+error: some substitutes for the outputs of derivation '...' failed
+  (usually happens due to networking issues)
+```
+
+先检查 DNS（`ping 8.8.8.8` 通但 `getent hosts cache.nixos.org` 失败即为此问题）：
+
+```bash
+cat /etc/resolv.conf                 # 若指向不通的 DNS（如校园网/公司 DNS）
+echo 'nameserver 10.0.2.3' | sudo tee /etc/resolv.conf   # VirtualBox NAT 的 DNS
+echo 'nameserver 8.8.8.8' | sudo tee -a /etc/resolv.conf
+getent hosts cache.nixos.org         # 应能解析
+```
+
+修好后重跑 `nixos-install`；实测修复后 `cache.nixos.org` 可达 2.4 MB/s。
+
 ### 下载被截断导致构建失败
 
 若报 `dpkg-deb: ... is truncated or corrupt`（例如 msedge 的 .deb），
