@@ -104,12 +104,30 @@
 
   # Homebrew on Linux：官方支持 /home/linuxbrew（brew 自更新，不走 nix）
   # 首次 rebuild 时自动执行官方 installer（幂等：已装则跳过）
-  system.activationScripts.homebrew = lib.stringAfter [ "etc" ] ''
-    if [ ! -d /home/linuxbrew/.linuxbrew ] && [ ! -f /home/linuxbrew/.linuxbrew/bin/brew ]; then
-      mkdir -p /home/linuxbrew
-      ${pkgs.curl}/bin/curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | ${pkgs.bash}/bin/bash -s -- --non-interactive || true
-    fi
-  '';
+  # Homebrew on Linux：官方支持 /home/linuxbrew（brew 自更新，不走 nix）。
+  # 用 systemd oneshot 而不是 activation 脚本——activation 阶段没有网络保证，
+  # 且 Homebrew 官方脚本要求 NONINTERACTIVE=1 环境变量（没有 --non-interactive 参数）。
+  # ConditionPathExists 取反：已安装则整条服务跳过。
+  systemd.services.homebrew-bootstrap = {
+    description = "首次安装 Homebrew on Linux（未安装时）";
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+    unitConfig.ConditionPathExists = "!/home/linuxbrew/.linuxbrew/bin/brew";
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "homebrew-bootstrap" ''
+        set -u
+        mkdir -p /home/linuxbrew
+        echo "→ 下载 Homebrew 安装脚本…"
+        ${pkgs.curl}/bin/curl -fsSL -o /tmp/brew-install.sh \
+          https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+        echo "→ 安装 Homebrew（可能需要几分钟）…"
+        NONINTERACTIVE=1 CI=1 ${pkgs.bash}/bin/bash /tmp/brew-install.sh
+        echo "✓ Homebrew 安装完成：/home/linuxbrew/.linuxbrew/bin/brew"
+      '';
+    };
+  };
 
   # Steam（unfree，wlroots/niri 下经 gamescope 或直接跑）
   programs.steam = {

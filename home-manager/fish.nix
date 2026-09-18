@@ -20,6 +20,11 @@
         oh-my-posh init fish --config ~/.config/oh-my-posh/clean-detailed.omp.json | source
       end
 
+      # Homebrew（若已安装；未装时由 systemd 服务 homebrew-bootstrap 自动安装）
+      if test -x /home/linuxbrew/.linuxbrew/bin/brew
+        eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+      end
+
       # zoxide 智能目录跳转（z）
       if type -q zoxide
         zoxide init fish | source
