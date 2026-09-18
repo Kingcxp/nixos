@@ -1,7 +1,7 @@
 # NixOS Configurations — kingcq / ThinkBook
 
 这是一个基于 Flake 的 NixOS 配置仓库，管理一台 ThinkBook 笔记本
-（Intel i7-1160G7 / Iris Xe / NVMe / UEFI）。它也是一个可读的示例，
+（Intel i7-1160G7 / Iris Xe / NVMe / BIOS+GRUB）。它也是一个可读的示例，
 展示如何把个人 NixOS 环境组织成声明式、可复现、可回滚的系统配置。
 
 ## 快速开始
@@ -399,7 +399,7 @@ sudo nixos-rebuild switch --flake /etc/nixos#thinkbook   # 改了配置后重建
 ## 安装教程（BIOS + GRUB，从零到可用桌面）
 
 > 本配置使用 **BIOS 启动 + GRUB**（不是 UEFI/systemd-boot）。
-> 先在虚拟机里练手？见第 13 节，用专用主机 `.#thinkbook-vm`。
+> 先在虚拟机里练手？见第 14 节，用专用主机 `.#thinkbook-vm`。
 
 ### 0. 装之前（5 分钟准备）
 
@@ -418,13 +418,32 @@ sync
 
 Windows 上可用 Rufus，写入模式选 **DD 镜像模式**。
 
-### 2. 从 U 盘启动
+### 2. 设置 BIOS（**关键步骤，先做完再启动**）
 
-1. 关机 → 开机时连按 **F12**（联想）→ 选择 U 盘
+本配置使用 **BIOS(Legacy) + GRUB**，而笔记本出厂默认是 UEFI 启动——
+必须先在 BIOS 里切换，否则装完无法引导。
+
+1. 关机 → 开机时连按 **F2**（联想 ThinkBook 进 BIOS；部分机型是 F1 或 Fn+F2）
+2. 找到启动模式设置，通常在这几处之一：
+   - `Boot` → `Boot Mode` → 改为 **Legacy Support**（或 `CSM Support` → Enabled）
+   - `Startup` → `UEFI/Legacy Boot` → **Legacy Only**
+   - 若只看到 `Secure Boot`：先把它设为 **Disabled**，Legacy/CSM 选项才会出现
+3. **把 U 盘设为第一启动项**（`Boot` → `Boot Priority` / `EFI/Legacy Boot Priority`）
+4. 保存退出（**F10** → Yes）
+
+> ⚠️ 如果 BIOS 里**找不到任何 Legacy/CSM 选项**（纯 UEFI 固件），本配置的
+> BIOS+GRUB 方案无法使用——请告诉我，我改成 UEFI+systemd-boot 的版本
+> （改动很小，只是引导部分和分区布局不同）。
+>
+> ThinkBook 20WJ（BIOS HLCN26WW）确认支持 Legacy 启动。
+
+### 3. 从 U 盘启动
+
+1. 关机 → 开机时连按 **F12**（联想）→ 选择 U 盘（若列表里出现两个，选 **Legacy** 那项）
 2. 进入 live 环境（root 自动登录；图形安装器窗口会弹出来，**直接关掉**）
 3. 打开终端：`Ctrl+Alt+T`，或按 `Ctrl+Alt+F2` 切到文字终端
 
-### 3. 联网（安装必须联网）
+### 4. 联网（安装必须联网）
 
 ```bash
 # 有线：插网线即可（NetworkManager 会自动获取地址）
@@ -434,7 +453,7 @@ sudo nmtui            # 选 "Activate a connection" → 选 WiFi → 输密码
 ping -c2 nixos.org
 ```
 
-### 4. 分区（MBR 分区表 + 一个主分区）
+### 5. 分区（MBR 分区表 + 一个主分区）
 
 ```bash
 lsblk                     # 确认目标盘，例如 /dev/nvme0n1
@@ -453,7 +472,7 @@ sudo fdisk /dev/nvme0n1   # 在交互界面依次输入：
 > `BIOS boot`（fdisk 里输入 `t` 再输 `4`）的小分区，再建主分区。
 > GRUB 装在磁盘开头的空隙里——**BIOS 启动不需要 EFI 分区**。
 
-### 5. 格式化 + 创建 Btrfs 子卷
+### 6. 格式化 + 创建 Btrfs 子卷
 
 ```bash
 sudo mkfs.btrfs -L nixos /dev/nvme0n1p1
@@ -465,7 +484,7 @@ sudo btrfs subvolume create /mnt/@nix
 sudo umount /mnt
 ```
 
-### 6. 按子卷挂载
+### 7. 按子卷挂载
 
 ```bash
 sudo mount -o subvol=@,compress=zstd,noatime /dev/nvme0n1p1 /mnt
@@ -478,7 +497,7 @@ df -h /mnt | tail -1     # 确认已挂载（应显示磁盘总容量）
 > BIOS + GRUB **不需要单独的 `/boot` 分区**：GRUB 直接读取根文件系统上的
 > `/boot` 目录（仓库的 `hardware-configuration.nix` 模板也是这个布局）。
 
-### 7. 生成硬件配置并替换仓库里的模板
+### 8. 生成硬件配置并替换仓库里的模板
 
 ```bash
 sudo nixos-generate-config --root /mnt
@@ -490,9 +509,9 @@ cp /mnt/etc/nixos/hardware-configuration.nix /tmp/nixos_kingcq/hosts/thinkbook/h
 ```
 
 > 若生成的文件里出现 `virtualisation.virtualbox.guest.enable = true;`，说明你在
-> **虚拟机**里——那请改用 `.#thinkbook-vm`（见第 13 节）；真机不会有这行。
+> **虚拟机**里——那请改用 `.#thinkbook-vm`（见第 14 节）；真机不会有这行。
 
-### 8. 安装
+### 9. 安装
 
 ```bash
 sudo cp -r /tmp/nixos_kingcq /mnt/nixos_kingcq
@@ -506,7 +525,7 @@ sudo nixos-install --flake .#thinkbook
   `Installation finished. No error reported.`
 - 中途出现 `No space left on device` → 空间不足，检查 `df -h /mnt`
 
-### 9. 重启
+### 10. 重启
 
 ```bash
 sudo reboot
@@ -516,7 +535,7 @@ sudo reboot
 
 启动流程：GRUB 菜单（Catppuccin 主题）→ 回车 → tuigreet 登录界面。
 
-### 10. 首次登录
+### 11. 首次登录
 
 - 用户名 **kingcq**，初始密码 **123456**
 - **第一件事就改密码**（初始密码明文保存在 /nix/store，只用于首次登录）：
@@ -525,7 +544,7 @@ sudo reboot
 passwd
 ```
 
-### 11. 把仓库接到 /etc/nixos（以后改配置用）
+### 12. 把仓库接到 /etc/nixos（以后改配置用）
 
 ```bash
 sudo mv /nixos_kingcq ~/nixos          # 安装时仓库在 /nixos_kingcq
@@ -541,7 +560,7 @@ sudo nixos-rebuild switch --flake /etc/nixos#thinkbook   # 验证一次
 nixos update        # 列出所有可更新项 → 确认 → 更新（系统/Homebrew/omp/固件）
 ```
 
-### 12. 装机后自检清单
+### 13. 装机后自检清单
 
 ```bash
 aplay -l | head -5          # 声卡（Intel SOF 固件）
@@ -555,7 +574,7 @@ nixos update -l             # 列出可更新项（不改动系统）
 对照检查：笔记本屏幕 `eDP-1` 正常、亮度键可用、声音可用、WiFi 可用、
 `Ctrl+Space` 能切中文、电池与功耗显示在 waybar 上。
 
-### 13. 先在 VirtualBox 里试装（推荐）
+### 14. 先在 VirtualBox 里试装（推荐）
 
 VM 用专用主机 **`thinkbook-vm`**：GRUB 目标盘自动设为 `/dev/sda`、niri 自动
 检测输出、内置 VirtualBox Guest Additions（含编译修复）。完整流程见
@@ -567,7 +586,7 @@ VM 用专用主机 **`thinkbook-vm`**：GRUB 目标盘自动设为 `/dev/sda`、
 - 磁盘是 `/dev/sda`（分区/格式化步骤同样替换设备名）
 - 重启前**移除 ISO**
 
-### 14. 装到一半出问题？
+### 15. 装到一半出问题？
 
 | 现象 | 原因与解法 |
 | --- | --- |

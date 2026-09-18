@@ -70,9 +70,9 @@
 
   # GTK/Qt 应用也统一用 JetBrainsMono Nerd Font（部分应用读 dconf 而非 fontconfig）
   environment.sessionVariables = {
-    # 输入法（Wayland 会话 + XWayland 应用都需要）
-    GTK_IM_MODULE = "fcitx";
-    QT_IM_MODULE = "fcitx";
+    # 输入法（对齐本机 Arch 行为：Wayland 原生应用走 text-input 协议，
+    # 不设 GTK_IM_MODULE/QT_IM_MODULE——设了反而会让 GTK 应用退回 X11 前端，
+    # fcitx5 自身也会提示取消。只有 XWayland/X11 应用需要 XMODIFIERS。）
     XMODIFIERS = "@im=fcitx";
     SDL_IM_MODULE = "fcitx";
     GLFW_IM_MODULE = "ibus";
