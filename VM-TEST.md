@@ -1,235 +1,187 @@
 # 在 VirtualBox 虚拟机中试装 NixOS
 
-先拿虚拟机练手、再上真机，是很稳的路径。虚拟机和你的真机有**三处关键差异**，
-处理好了整个流程和真机安装几乎一样：
+先在虚拟机里练手、确认无误再上真机，是很稳的路径。本配置在 VM 里有一个**专用
+主机 `thinkbook-vm`**，它自动处理了所有 VM 差异——你不需要手改任何文件。
 
-| 差异点 | 真机 (ThinkBook) | VirtualBox 虚拟机 |
+| 差异点 | 真机 ThinkBook | VirtualBox 虚拟机 |
 | --- | --- | --- |
-| 磁盘设备名 | `/dev/nvme0n1` | `/dev/sda`（SATA 虚拟盘） |
-| 显卡 | Intel Iris Xe | VirtualBox 虚拟显卡（VMSVGA） |
-| 显示器名 | `eDP-1` | VirtualBox 虚拟显示器名 |
-| BIOS | UEFI | 需手动开启 EFI（默认可能是 BIOS） |
+| flake 目标 | `.#thinkbook` | **`.#thinkbook-vm`** |
+| 磁盘设备 | `/dev/nvme0n1` | `/dev/sda` |
+| GRUB 目标盘 | `/dev/nvme0n1` | `/dev/sda`（变体内置） |
+| niri 输出 | 写死 `eDP-1` 内屏 | 自动检测所有输出 |
+| 显卡 | Intel Iris Xe | VMSVGA（需开 3D 加速） |
+| Guest Additions | 不需要 | 自动启用（含编译修复） |
+| 启动方式 | BIOS + GRUB | 同样是 BIOS + GRUB（**不要开 EFI**） |
 
-下面每一步都可以复用 README 里的安装教程，这里只讲**虚拟机特定的部分**。
+> 除上表外，分区、格式化、安装、登录等步骤与 README《安装教程》**完全相同**，
+> 只是把设备名换成 `/dev/sda`、flake 名换成 `.#thinkbook-vm`。
 
 ---
 
-## 1. 创建虚拟机
+## 1. 创建虚拟机（关键设置）
 
-VirtualBox 新建虚拟机，关键设置：
+VirtualBox 新建虚拟机：
 
 - **类型/版本**：Linux → Linux 2.6 / 3.x / 4.x (64-bit)
-- **内存**：建议 4096 MB 以上（niri + 浏览器够用）
-- **硬盘**：40 GB 即可（动态分配），格式 VDI 或 VMDK 都行
-- **系统 → 主板**：
-  - ☑ 启用 EFI（**必须开**，本配置是 systemd-boot/UEFI 布局）
-  - ☑ 启用 IO/APIC
-- **系统 → 处理器**：2–4 核
+- **内存**：**6144–8192 MB**（4 GB 会在构建时 OOM 被 kill）
+- **硬盘**：**60 GB**（动态分配）。40 GB 会因闭包 ~28 GB 而构建失败
+- **系统 → 主板**：**不要勾"启用 EFI"**（本配置是 BIOS + GRUB）
+- **系统 → 处理器**：4 核
 - **显示**：
   - 显卡控制器：**VMSVGA**
-  - ☑ 启用 3D 加速，显存 128 MB
-- **网络**：默认 NAT（能上网下载包即可）；`nixos-install` 需要联网
+  - ☑ **启用 3D 加速**（不勾会导致 niri 黑屏）
+  - 显存：**128 MB**
+- **网络**：NAT（默认）——安装时必须能联网
+- 存储：光驱挂载 NixOS ISO
 
-## 2. 挂载安装 ISO 并启动
+## 2. 启动 live 环境
 
-虚拟机设置 → 存储 → 光驱 → 选择下载的 NixOS ISO →
-启动虚拟机，选默认 "NixOS" 进入 live 环境。
+启动虚拟机 → 进入 live 环境（root 自动登录）。图形安装器窗口会弹出来，
+**关掉它**，用终端（`Ctrl+Alt+T`，或 `Ctrl+Alt+F2` 切文字终端）。
 
-> live 环境默认是 root，没有图形界面，是一个 TTY。
-
-## 3. 分区（虚拟盘）
-
-与 README 教程相同，只是设备是 `/dev/sda`：
+联网验证：
 
 ```bash
-# 查看虚拟盘
-lsblk
-
-# 分区：sda1 = EFI (512M)，sda2 = Btrfs 剩余全部
-sudo fdisk /dev/sda   # 交互式：g 建 GPT，n 建两个分区，t 设第一个为 EFI
+ping -c2 nixos.org
 ```
 
-格式化与子卷：
+NAT 网络通常开箱即用；不通就 `sudo nmtui` 配一下。
+
+## 3. 分区（`/dev/sda`）
+
+与 README 第 4 节相同，只是设备是 `/dev/sda`：
 
 ```bash
-sudo mkfs.fat -F 32 /dev/sda1
-sudo mkfs.btrfs -L nixos /dev/sda2
+lsblk                     # 确认是 /dev/sda
+sudo fdisk /dev/sda
+#   o      ← MBR 分区表（清空磁盘）
+#   n → p → 1 → 回车 → 回车
+#   a      ← 标记可启动
+#   w      ← 写入
+```
 
-sudo mount /dev/sda2 /mnt
+## 4. 格式化 + Btrfs 子卷
+
+```bash
+sudo mkfs.btrfs -L nixos /dev/sda1
+sudo mount /dev/sda1 /mnt
 sudo btrfs subvolume create /mnt/@
 sudo btrfs subvolume create /mnt/@home
 sudo btrfs subvolume create /mnt/@nix
 sudo umount /mnt
 ```
 
-挂载：
+## 5. 挂载
 
 ```bash
-sudo mount -o subvol=@,compress=zstd,noatime /dev/sda2 /mnt
-sudo mkdir -p /mnt/{boot,home,nix}
-sudo mount -o subvol=@home,compress=zstd,noatime /dev/sda2 /mnt/home
-sudo mount -o subvol=@nix,compress=zstd,noatime /dev/sda2 /mnt/nix
-sudo mount /dev/sda1 /mnt/boot
+sudo mount -o subvol=@,compress=zstd,noatime /dev/sda1 /mnt
+sudo mkdir -p /mnt/{home,nix}
+sudo mount -o subvol=@home,compress=zstd,noatime /dev/sda1 /mnt/home
+sudo mount -o subvol=@nix,compress=zstd,noatime /dev/sda1 /mnt/nix
+df -h /mnt | tail -1
 ```
 
-## 4. 生成硬件配置并放仓库
+## 6. 生成硬件配置 + 取仓库 + 安装
 
 ```bash
 sudo nixos-generate-config --root /mnt
-cat /mnt/etc/nixos/hardware-configuration.nix   # 确认是 /dev/sda 的 UUID
-```
-
-把这个生成的文件复制到本仓库：
-
-```bash
-cp /mnt/etc/nixos/hardware-configuration.nix hosts/thinkbook/hardware-configuration.nix
-```
-
-## 5. 获取本仓库（虚拟机里）
-
-live 环境要拿到本仓库，两种方式：
-
-**方式 A：git clone（需联网 GitHub）**
-
-```bash
 git clone https://github.com/Kingcxp/nixos.git /tmp/nixos_kingcq
-```
+cp /mnt/etc/nixos/hardware-configuration.nix /tmp/nixos_kingcq/hosts/thinkbook/hardware-configuration.nix
 
-**方式 B：共享文件夹（推荐，网络差时最稳）**
+# 生成的文件里若带 virtualisation.virtualbox.guest.enable = true; 是正常的
+# （thinkbook-vm 已内置该选项与编译修复，无需手改）
+grep virtualbox /tmp/nixos_kingcq/hosts/thinkbook/hardware-configuration.nix
 
-1. VirtualBox 菜单 → 设备 → 共享文件夹 → 添加本机仓库目录，勾选"自动挂载"
-2. live 环境里：
-
-```bash
-sudo mkdir -p /mnt/host-repo
-sudo mount -t vboxsf <共享名> /mnt/host-repo
-cp -r /mnt/host-repo /tmp/nixos_kingcq
-```
-
-> 若 `vboxsf` 模块不在 live 里，先 `sudo modprobe vboxsf`。
-
-## 6. 复制仓库进 /mnt 并安装（用 `thinkbook-vm` 变体）
-
-本 flake 提供专用的 VM 变体主机 **`thinkbook-vm`**：GRUB 目标盘自动为
-`/dev/sda`、niri 自动检测输出（无需手改 output.kdl）、内置 VirtualBox
-Guest Additions（含 mount.vboxsf 内核不匹配的修复）：
-
-```bash
 sudo cp -r /tmp/nixos_kingcq /mnt/nixos_kingcq
 cd /mnt/nixos_kingcq
-sudo nixos-install --flake .#thinkbook-vm
+sudo nixos-install --flake .#thinkbook-vm      # ← 注意是 -vm 变体
 ```
 
-> 主机名仍是 `thinkbook`（networking.hostName），不影响使用。
+成功标志：
 
-## 6b. 已装系统的仓库更新（git pull 之后）
-
-VM 里更新仓库后直接用 `thinkbook-vm` 重建：
-
-```bash
-sudo nixos-rebuild switch --flake /etc/nixos#thinkbook-vm
+```
+installing the GRUB 2 boot loader on /dev/sda...
+Installation finished. No error reported.
 ```
 
-**不再需要**手工给 hardware-configuration.nix 追加 `grub.device`、
-改 output.kdl 或删 guest.enable——变体主机全部内置。
-
-## 7. 设置密码并重启
+## 7. 重启前**移除 ISO**
 
 ```bash
-sudo nixos-chroot /mnt passwd kingcq
 sudo reboot
 ```
 
-## 8. 虚拟机里可能遇到的小问题
+在 VirtualBox 里先把光驱里的 ISO 弹出/移除（设备 → 光驱 → 移除磁盘），
+**否则重启又会进安装器**。
 
-### 已验证：本配置在 VirtualBox 完整试装通过
+## 8. 登录
 
-2026-09 在 VirtualBox 7.2 (BIOS + VMSVGA) 实测全流程：
-`nixos-install --flake .#thinkbook-vm` → 重启 → tuigreet → 登录
-kingcq → niri 桌面（waybar/壁纸/指针全部正常渲染）。
-
-实测发现的坑与解法（`thinkbook-vm` 变体已内置）：
-
-1. **必须开启 3D 加速**（设置 → 显示 → 勾选"启用 3D 加速"）——否则 niri
-   启动后只有深蓝空屏：日志报 `software EGL renderers are skipped` +
-   `no allocator available for device`（wlroots 拿不到 GBM 渲染器）。
-2. **40G 磁盘不够**：完整系统闭包约 28G+，构建期间再加临时空间会写满
-   （表现为一堆 fish-completions/libdbm 等小构建报 `exit code 1`，日志提示
-   "lack of free disk space"）。**磁盘给 60G**，或装不下时先删 swapfile 清空间。
-3. **内存 6–8G**：4G 下 nix 构建 OOM 被 kill；宿主机内存紧张时用 6G + 8G swapfile。
-4. **26.05 ISO 的 hv_* 模块**：`systemd-modules-load` 尝试加载 Hyper-V 模块
-   （hv_vmbus/hv_netvsc）失败会把 live 环境打进 emergency mode——Ctrl-D
-   继续引导即可，不影响安装。
-5. **重启后从 ISO 引导**：安装完记得在存储设置里移除 ISO（或改启动顺序硬盘优先），
-   否则又进安装器。
-
-### niri 桌面黑屏 / 显示器不对
-
-本仓库 `home-manager/desktop/niri/config/output.kdl` 写死了 `eDP-1`，
-虚拟机里显示器名不同，可能没有输出。修复：
+GRUB 菜单（Catppuccin 主题）→ tuigreet → 用户名 `kingcq` / 密码 `123456`
+→ 进入 niri 桌面。第一件事改密码：
 
 ```bash
-# 在 niri 会话里查看实际输出名
-niri msg outputs
+passwd
 ```
 
-然后临时把 `output.kdl` 里的 `output "eDP-1"` 注释掉或改成实际名字，
-重新 `nixos-rebuild switch --flake /etc/nixos#thinkbook`。
-
-> 或者更省事：VM 里先注释掉整个 output 块让 niri 自动检测。
-> **真机安装时恢复 eDP-1。**
-
-### 3D 加速 / 动画卡顿
-
-VirtualBox 的 Wayland 合成器性能一般。若动画卡顿，可在
-`misc.kdl` 的 `animations` 里加 `off` 临时关掉动画，真机再开。
-
-### 报错：efiSysMountPoint = '/boot' is not a mounted partition
-
-`nixos-install` 最后一步安装 bootloader 失败，通常是**硬件配置的 UUID 与
-虚拟盘不匹配**导致 `/boot` 没有被挂载：
-
-1. 仓库里的 `hosts/thinkbook/hardware-configuration.nix` 是**真机 UUID**
-   （`/dev/disk/by-uuid/0A51-499C` 等），在 VM 里不存在。
-2. 必须按第 4 步在 VM 里重新生成并**替换**它：
+把仓库接到 `/etc/nixos`（与真机相同）：
 
 ```bash
-sudo nixos-generate-config --root /mnt
-cp /mnt/etc/nixos/hardware-configuration.nix /mnt/nixos_kingcq/hosts/thinkbook/hardware-configuration.nix
+sudo mv /nixos_kingcq ~/nixos
+sudo chown -R kingcq:users ~/nixos
+sudo rm -rf /etc/nixos && sudo ln -s ~/nixos /etc/nixos
+sudo nixos-rebuild switch --flake /etc/nixos#thinkbook-vm
 ```
-
-3. 替换后确认挂载点存在、UUID 与 `lsblk -f` 一致：
-
-```bash
-lsblk -f /dev/sda          # 看 sda1 的 UUID（应为 FAT32/EFI）
-cat /mnt/etc/nixos/hardware-configuration.nix | grep -A5 fileSystems
-findmnt /mnt/boot          # 应显示 /dev/sda1 挂载在 /mnt/boot
-```
-
-> 若上面都正确仍报错，检查虚拟机是否**开启了 EFI**（设置 → 系统 →
-> 主板 → 启用 EFI）——BIOS 模式下 systemd-boot 无法安装。
-
-### 亮度键无效
-
-VM 里没有真实背光，亮度键和 waybar 亮度模块会显示但无效，属正常。
-真机上恢复。
-
-### 触摸板/触控板手势
-
-VM 里没有真实触摸板，`input.kdl` 的触摸板设置不影响虚拟机。真机恢复。
 
 ---
 
-## 9. 试装完 → 真机安装
+## 9. 实测记录与已知限制（2026-09 在 VirtualBox 7.2 复现验证）
 
-确认在 VM 里能正常进入 niri 桌面、waybar 显示、软件可用后，返回真机安装：
+以下问题全部实测复现过，附解法：
 
-1. `git pull` 本仓库最新（VM 里若改过 output.kdl 等，先改回真机版本）
-2. 按主 README 的「完整安装教程」在真机执行（磁盘是 `/dev/nvme0n1`，
-   显示器是 `eDP-1`，Intel 显卡参数生效）
-3. 真机上 `nixos-generate-config` 重新生成 hardware-configuration.nix
+### VM 里必须开 3D 加速
 
----
+不开 3D 时 niri 启动后只有深蓝空屏，日志报：
 
-> 记住核心原则：**hardware-configuration.nix 一定要在目标机（真机）上
-> 重新生成**，仓库里那份只是模板。
+```
+niri::backend::tty: failed to initialize renderer, falling back to primary gpu
+niri::backend::tty: error adding primary node device ... no allocator available
+```
+
+→ VirtualBox 设置里勾选"启用 3D 加速"（VMSVGA）。
+
+### 内存与磁盘
+
+| 配置 | 结果 |
+| --- | --- |
+| 4 GB 内存 | `nix build` 被 OOM kill（构建中断） |
+| 8 GB + 8 GB swapfile | 稳定通过 |
+| 40 GB 磁盘 | 构建后期 `No space left on device`，一堆小包 `exit code 1` |
+| **60 GB 磁盘** | 通过 |
+
+### 26.05 ISO 的 hv_* 模块（只影响 live 环境）
+
+live 环境启动时 `systemd-modules-load` 会尝试加载 Hyper-V 驱动失败，进入
+emergency mode：**按回车进维护 shell，或用 Ctrl-D 继续引导**，不影响安装。
+
+### 下载被截断导致构建失败
+
+若报 `dpkg-deb: ... is truncated or corrupt`（例如 msedge 的 .deb），
+是下载中断导致 store 里的文件损坏，用 Nix 自带修复重下：
+
+```bash
+sudo nix-store --verify --check-contents --repair
+```
+
+### niri 相关
+
+- 输出：`thinkbook-vm` 变体自动检测所有输出，**无需手改 `output.kdl`**
+- 撕裂/渲染毛刺：VMSVGA 的软件/半加速路径所致，真机（Intel 原生驱动）没有
+- 鼠标指针、壁纸、waybar 均正常
+
+## 10. 试装完 → 上真机
+
+确认 VM 里能正常进桌面、网络/声音/输入法可用后，按 README《安装教程》在
+真机上操作，把 `.#thinkbook-vm` 换回 **`.#thinkbook`**、设备名换回
+`/dev/nvme0n1`。
+
+> 记住：`hardware-configuration.nix` 一定要在目标机器上重新生成；
+> 仓库里那份只是模板。

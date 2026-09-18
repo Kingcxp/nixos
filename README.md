@@ -263,6 +263,84 @@ sudo nixos-rebuild build --flake /etc/nixos#thinkbook
 暴露（例如 sudoers 未转义冒号会在 `visudo` 时报 syntax error），求值检查
 查不出来，所以真实构建必不可少。
 
+## 常用操作速查
+
+> `Mod` = **Super 键**（Windows 键）。按 **`Mod+Shift+/`** 随时弹出快捷键面板
+> （hotkey overlay），忘了就按它。
+
+### 窗口与工作区（最常用）
+
+| 操作 | 快捷键 |
+| --- | --- |
+| **在窗口间切换焦点** | `Mod+←/→`（左右列）、`Mod+↑/↓`（列内上下窗口） |
+| 同上（Vim 风格） | `Mod+H/J/K/L` |
+| **Alt+Tab：切到上一个工作区** | `Alt+Tab` |
+| 切换到工作区 1–9 | `Mod+1` … `Mod+9` |
+| **把当前窗口移到另一个工作区** | **`Mod+Ctrl+1` … `Mod+Ctrl+9`** |
+| 把整列移到另一个工作区 | `Mod+Shift+1` … `Mod+Shift+9` |
+| 把窗口移到上/下个工作区 | `Mod+Ctrl+Page_Up` / `Mod+Ctrl+Page_Down` |
+| 移动窗口在工作区内的位置 | `Mod+Shift+←/→`（左右移列）、`Mod+Shift+↑/↓`（列内上下） |
+| 关闭窗口 | `Mod+C` |
+| 窗口全屏 | `Mod+Shift+F` |
+| 列最大化（占满宽度） | `Mod+Shift+M` |
+| 列宽在 25/50/75/100% 间切换 | `Mod+Shift+R` |
+| 窗口浮动/平铺切换 | `Mod+V` |
+| 微调列宽 | `Mod+Minus` / `Mod+Equal` |
+| 工作区总览（缩略图） | `Mod+Tab` |
+| 鼠标滚轮切换工作区 | `Mod+滚轮` |
+| 退出 niri | `Ctrl+Alt+Delete` |
+
+> **"怎么把窗口移到另一个桌面"** = `Mod+Ctrl+数字`（单个窗口）或
+> `Mod+Shift+数字`（整列）。例如把浏览器丢到第 3 个工作区：`Mod+Ctrl+3`。
+
+### 启动应用
+
+| 操作 | 快捷键 |
+| --- | --- |
+| 终端 kitty | `Mod+Q` |
+| 应用启动器 wofi | `Mod+R` |
+| 浏览器 firefox | `Mod+F` |
+| 文件管理器 dolphin | `Mod+E` |
+| 编辑器 VSCode | `Mod+G` |
+| 锁屏 | `Mod+Delete` |
+| 注销菜单 wlogout | `Mod+M` |
+| 通知历史 | `Mod+I` |
+| 截图（选区） | `Mod+P` |
+| 截图（当前窗口） | `Mod+Shift+P` |
+
+### 系统
+
+| 操作 | 方式 |
+| --- | --- |
+| 音量 +/−/静音 | `XF86Audio*` 功能键（笔记本 Fn 组合） |
+| 亮度 +/− | `XF86MonBrightness*`（最低钳制在 5%，不会黑屏） |
+| 播放/暂停/切歌 | `XF86AudioPlay/Next/Prev` |
+| **切换中英文输入法** | `Ctrl+Space` |
+| 终端里切换 shell 历史搜索 | `Ctrl+R`（fzf） |
+| 终端里模糊找文件 | `Ctrl+T`（fzf） |
+| 智能跳转目录 | `z <关键词>`（zoxide） |
+
+### 更新与维护
+
+```bash
+nixos update          # 一键检查+更新（系统/Homebrew/omp/固件），会先列出再确认
+nixos update -l       # 只看有哪些可更新
+nixos update -i       # 用 fzf 勾选要更新的部分
+fwupdate              # 只检查/安装固件更新
+sudo nixos-rebuild switch --flake /etc/nixos#thinkbook   # 改了配置后重建
+```
+
+### 遇到问题
+
+| 情况 | 处理 |
+| --- | --- |
+| 屏幕被截图模式盖住 | 按 `Esc` |
+| 桌面卡死 | `Ctrl+Alt+F2` 切 TTY 登录，`pkill niri` 后重登 |
+| 系统起不来 | GRUB 菜单选上一个 generation（回滚） |
+| 配置改坏了 | `sudo nixos-rebuild switch --rollback` |
+
+---
+
 ## 新增主机
 
 把这个仓库当模板加一台新机器：
@@ -318,135 +396,187 @@ sudo nixos-rebuild build --flake /etc/nixos#thinkbook
    sudo nixos-rebuild switch --flake /etc/nixos#my-machine
    ```
 
-## 安装教程
+## 安装教程（BIOS + GRUB，从零到可用桌面）
 
-以下步骤假设你已下载 NixOS 安装 ISO 并制作了启动 U 盘。
+> 本配置使用 **BIOS 启动 + GRUB**（不是 UEFI/systemd-boot）。
+> 先在虚拟机里练手？见第 13 节，用专用主机 `.#thinkbook-vm`。
 
-### 1. 准备安装介质
+### 0. 装之前（5 分钟准备）
 
-```bash
-# 在任意 Linux 上把 ISO 写入 U 盘（替换 /dev/sdX 为你的 U 盘设备号）
-sudo dd if=/path/to/nixos.iso of=/dev/sdX bs=4M status=progress conv=fsync
-```
+- **备份数据**——下面的分区操作会清空整块磁盘
+- 下载 NixOS ISO：<https://nixos.org/download>（Graphical ISO）
+- 准备一个 ≥ 4 GB 的 U 盘（内容会被清空）
+- 确认目标磁盘设备名：`lsblk`（本机为 `/dev/nvme0n1`）
 
-NixOS 官方 ISO：<https://nixos.org/download>
-
-### 2. 启动到安装环境
-
-U 盘启动 → 选择默认的 "NixOS" 安装项 → 进入 live 环境（自动登录 root 终端）。
-
-### 3. 规划磁盘并分区
-
-本配置的 `hosts/thinkbook/hardware-configuration.nix` 使用下面的布局
-（**Btrfs + 子卷 + systemd-boot**）：
-
-```text
-/dev/nvme0n1p1  ->  /boot       (EFI, FAT32, 约 512M–1G)
-/dev/nvme0n1p2  ->  Btrfs 卷     (剩余全部空间)
-   ├── 子卷 @          ->  /
-   ├── 子卷 @home      ->  /home
-   └── 子卷 @nix        ->  /nix   (可选，推荐隔离)
-```
-
-分区示例（`sudo fdisk /dev/nvme0n1`）：
-
-```text
-nvme0n1p1:  type=EFI System, size=512M
-nvme0n1p2:  type=Linux filesystem, 剩余全部
-```
-
-> ⚠️ **会清空磁盘**。操作前备份数据。
-
-格式化并创建子卷：
+### 1. 制作启动 U 盘
 
 ```bash
-# EFI 分区
-sudo mkfs.fat -F 32 /dev/nvme0n1p1
+# 在任意 Linux 上执行（/dev/sdX 换成你的 U 盘，写错会毁掉别的盘！）
+sudo dd if=nixos-graphical-*.iso of=/dev/sdX bs=4M status=progress conv=fsync
+sync
+```
 
-# Btrfs 主卷 + 子卷
-sudo mkfs.btrfs -L nixos /dev/nvme0n1p2
-sudo mount /dev/nvme0n1p2 /mnt
+Windows 上可用 Rufus，写入模式选 **DD 镜像模式**。
+
+### 2. 从 U 盘启动
+
+1. 关机 → 开机时连按 **F12**（联想）→ 选择 U 盘
+2. 进入 live 环境（root 自动登录；图形安装器窗口会弹出来，**直接关掉**）
+3. 打开终端：`Ctrl+Alt+T`，或按 `Ctrl+Alt+F2` 切到文字终端
+
+### 3. 联网（安装必须联网）
+
+```bash
+# 有线：插网线即可（NetworkManager 会自动获取地址）
+# 无线：
+sudo nmtui            # 选 "Activate a connection" → 选 WiFi → 输密码
+# 验证
+ping -c2 nixos.org
+```
+
+### 4. 分区（MBR 分区表 + 一个主分区）
+
+```bash
+lsblk                     # 确认目标盘，例如 /dev/nvme0n1
+sudo fdisk /dev/nvme0n1   # 在交互界面依次输入：
+```
+
+| 输入 | 含义 |
+| --- | --- |
+| `o` | 新建空 DOS(MBR) 分区表（**清空磁盘**） |
+| `n` → `p` → `1` | 新建主分区 1 |
+| 回车、回车 | 起始/结束扇区都用默认（= 整块盘） |
+| `a` | 标记分区 1 为可启动 |
+| `w` | 写入并退出 |
+
+> **想用 GPT 也行**：把 `o` 换成 `g`，然后先建一个 `+1M`、类型为
+> `BIOS boot`（fdisk 里输入 `t` 再输 `4`）的小分区，再建主分区。
+> GRUB 装在磁盘开头的空隙里——**BIOS 启动不需要 EFI 分区**。
+
+### 5. 格式化 + 创建 Btrfs 子卷
+
+```bash
+sudo mkfs.btrfs -L nixos /dev/nvme0n1p1
+
+sudo mount /dev/nvme0n1p1 /mnt
 sudo btrfs subvolume create /mnt/@
 sudo btrfs subvolume create /mnt/@home
 sudo btrfs subvolume create /mnt/@nix
 sudo umount /mnt
 ```
 
-### 4. 挂载
+### 6. 按子卷挂载
 
 ```bash
-sudo mount -o subvol=@,compress=zstd,noatime /dev/nvme0n1p2 /mnt
-sudo mkdir -p /mnt/{boot,home,nix}
-sudo mount -o subvol=@home,compress=zstd,noatime /dev/nvme0n1p2 /mnt/home
-sudo mount -o subvol=@nix,compress=zstd,noatime /dev/nvme0n1p2 /mnt/nix
-sudo mount /dev/nvme0n1p1 /mnt/boot
+sudo mount -o subvol=@,compress=zstd,noatime /dev/nvme0n1p1 /mnt
+sudo mkdir -p /mnt/{home,nix}
+sudo mount -o subvol=@home,compress=zstd,noatime /dev/nvme0n1p1 /mnt/home
+sudo mount -o subvol=@nix,compress=zstd,noatime /dev/nvme0n1p1 /mnt/nix
+df -h /mnt | tail -1     # 确认已挂载（应显示磁盘总容量）
 ```
 
-### 5. 生成硬件配置
+> BIOS + GRUB **不需要单独的 `/boot` 分区**：GRUB 直接读取根文件系统上的
+> `/boot` 目录（仓库的 `hardware-configuration.nix` 模板也是这个布局）。
+
+### 7. 生成硬件配置并替换仓库里的模板
 
 ```bash
 sudo nixos-generate-config --root /mnt
+
+# 取仓库
+git clone https://github.com/Kingcxp/nixos.git /tmp/nixos_kingcq
+# 关键一步：用本机真实硬件配置替换仓库模板（否则会套用别人机器的 UUID）
+cp /mnt/etc/nixos/hardware-configuration.nix /tmp/nixos_kingcq/hosts/thinkbook/hardware-configuration.nix
 ```
 
-这会生成 `/mnt/etc/nixos/hardware-configuration.nix`（含你磁盘的真实 UUID
-和内核模块）。**把这个文件替换进本仓库**（重要——仓库里那份是手写的旧布局）：
+> 若生成的文件里出现 `virtualisation.virtualbox.guest.enable = true;`，说明你在
+> **虚拟机**里——那请改用 `.#thinkbook-vm`（见第 13 节）；真机不会有这行。
+
+### 8. 安装
 
 ```bash
-cp /mnt/etc/nixos/hardware-configuration.nix hosts/thinkbook/hardware-configuration.nix
-```
-
-### 6. 把仓库放到安装环境并安装
-
-方式 A：直接把仓库拷进 /mnt：
-
-```bash
-# 在 live 环境里（先联网：iwctl/nmcli 或插网线）
-sudo cp -r /path/to/nixos_kingcq /mnt/nixos_kingcq
+sudo cp -r /tmp/nixos_kingcq /mnt/nixos_kingcq
 cd /mnt/nixos_kingcq
 sudo nixos-install --flake .#thinkbook
 ```
 
-方式 B：先装基础系统再应用 flake（更稳，分两步）：
+- 会下载约 3 GB 并按需构建，**大概 20–40 分钟**（视网络）
+- 成功标志（最后几行）：
+  `installing the GRUB 2 boot loader on /dev/nvme0n1...` →
+  `Installation finished. No error reported.`
+- 中途出现 `No space left on device` → 空间不足，检查 `df -h /mnt`
+
+### 9. 重启
 
 ```bash
-# 先按生成的基础配置装上
-cd /mnt/etc/nixos
-sudo nixos-install
-
-# 重启进新系统后，把仓库链接为 /etc/nixos 再部署
-sudo rm -rf /etc/nixos
-sudo ln -s /path/to/nixos_kingcq /etc/nixos
-sudo nixos-rebuild switch --flake /etc/nixos#thinkbook
-```
-
-`nixos-install --flake .#thinkbook` 会读取仓库里的 `hosts/thinkbook/`、
-`modules/`、`home-manager/` 全套配置，构建完整的 niri 桌面系统并安装。
-
-### 7. 设置用户密码并重启
-
-```bash
-# 安装时如果没提示，设置 kingcq 密码（配置里的用户是 kingcq）
-sudo nixos-install          # 会提示设置 root 密码
-# 用户 kingcq 的初始密码在首次登录时由 `passwd kingcq` 设置：
-sudo nixos-chroot /mnt passwd kingcq
-
 sudo reboot
 ```
 
-> 配置里已设置初始密码 `123456`（`initialPassword`），**装完请立即用
-> `passwd` 修改**——初始密码明文存在于 `/nix/store` 配置中，仅首次登录用。
+**重启前拔掉 U 盘**（或在 BIOS 里把硬盘调到第一启动项），否则又会进安装器。
 
-重启后：**greetd 密码登录（tuigreet）** → 输入 kingcq 密码 → 进入 niri 桌面。
+启动流程：GRUB 菜单（Catppuccin 主题）→ 回车 → tuigreet 登录界面。
 
-### 8. 装机后首次检查
+### 10. 首次登录
+
+- 用户名 **kingcq**，初始密码 **123456**
+- **第一件事就改密码**（初始密码明文保存在 /nix/store，只用于首次登录）：
 
 ```bash
-# 确认系统生成器正常
-sudo nix-env --list-generations -p /nix/var/nix/profiles/system
-
-# 确认 flake 可用
-nix flake check --flake /etc/nixos#thinkbook
+passwd
 ```
+
+### 11. 把仓库接到 /etc/nixos（以后改配置用）
+
+```bash
+sudo mv /nixos_kingcq ~/nixos          # 安装时仓库在 /nixos_kingcq
+sudo chown -R kingcq:users ~/nixos
+sudo rm -rf /etc/nixos
+sudo ln -s ~/nixos /etc/nixos
+sudo nixos-rebuild switch --flake /etc/nixos#thinkbook   # 验证一次
+```
+
+之后日常更新只需要一条命令（详见 USAGE.md）：
+
+```bash
+nixos update        # 列出所有可更新项 → 确认 → 更新（系统/Homebrew/omp/固件）
+```
+
+### 12. 装机后自检清单
+
+```bash
+aplay -l | head -5          # 声卡（Intel SOF 固件）
+vainfo | head -5            # 视频硬解（VA-API）
+nmcli device status         # 无线/有线
+fcitx5-configtool           # 输入法（Ctrl+Space 切中文智能拼音）
+fwupdate                    # 固件更新检查
+nixos update -l             # 列出可更新项（不改动系统）
+```
+
+对照检查：笔记本屏幕 `eDP-1` 正常、亮度键可用、声音可用、WiFi 可用、
+`Ctrl+Space` 能切中文、电池与功耗显示在 waybar 上。
+
+### 13. 先在 VirtualBox 里试装（推荐）
+
+VM 用专用主机 **`thinkbook-vm`**：GRUB 目标盘自动设为 `/dev/sda`、niri 自动
+检测输出、内置 VirtualBox Guest Additions（含编译修复）。完整流程见
+《[VirtualBox 试装指南](VM-TEST.md)》，要点：
+
+- VM 设置：**BIOS 启动**（不要开 EFI）、6–8 GB 内存、**60 GB 磁盘**、
+  显卡 VMSVGA + **勾选 3D 加速**
+- 安装命令把 `--flake .#thinkbook` 换成 `--flake .#thinkbook-vm`
+- 磁盘是 `/dev/sda`（分区/格式化步骤同样替换设备名）
+- 重启前**移除 ISO**
+
+### 14. 装到一半出问题？
+
+| 现象 | 原因与解法 |
+| --- | --- |
+| `Cannot build ... sudoers.drv`（syntax error） | 已修复；确保用的是仓库最新代码 |
+| `efiSysMountPoint '/boot' is not a mounted partition` | 说明你按旧的 UEFI 流程装了 / 或仍用 systemd-boot；本配置是 BIOS+GRUB，**不需要 EFI 分区** |
+| `cannot find a GRUB drive for /dev/nvme0n1` | 在 VM 里用了真机主机名 → 改用 `.#thinkbook-vm` |
+| 一堆小构建 `exit code 1` + 日志提 `No space left` | 磁盘/分区太小（VM 建议 60 G） |
+| 重启后又进安装器 | ISO 没拔 |
+| 下载中断报 `truncated or corrupt` | 用 `sudo nix-store --verify --check-contents --repair` 修复 |
 
 ---
 

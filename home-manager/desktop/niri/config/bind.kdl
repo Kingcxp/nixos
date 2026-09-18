@@ -47,6 +47,7 @@ binds {
     Mod+8 { focus-workspace 8; }
     Mod+9 { focus-workspace 9; }
 
+    // 整列移动到工作区
     Mod+Shift+1 { move-column-to-workspace 1; }
     Mod+Shift+2 { move-column-to-workspace 2; }
     Mod+Shift+3 { move-column-to-workspace 3; }
@@ -56,6 +57,21 @@ binds {
     Mod+Shift+7 { move-column-to-workspace 7; }
     Mod+Shift+8 { move-column-to-workspace 8; }
     Mod+Shift+9 { move-column-to-workspace 9; }
+
+    // 单个窗口移动到工作区（列内有多个窗口时只移动当前窗口）
+    Mod+Ctrl+1 { move-window-to-workspace 1; }
+    Mod+Ctrl+2 { move-window-to-workspace 2; }
+    Mod+Ctrl+3 { move-window-to-workspace 3; }
+    Mod+Ctrl+4 { move-window-to-workspace 4; }
+    Mod+Ctrl+5 { move-window-to-workspace 5; }
+    Mod+Ctrl+6 { move-window-to-workspace 6; }
+    Mod+Ctrl+7 { move-window-to-workspace 7; }
+    Mod+Ctrl+8 { move-window-to-workspace 8; }
+    Mod+Ctrl+9 { move-window-to-workspace 9; }
+
+    // 上下移动窗口到相邻工作区（到边界时自动带去下一个工作区）
+    Mod+Ctrl+Page_Down { move-window-down-or-to-workspace-down; }
+    Mod+Ctrl+Page_Up   { move-window-up-or-to-workspace-up; }
 
     // Alt+Tab: switch between the two most recently used workspaces
     Alt+Tab { focus-workspace-previous; }
@@ -67,6 +83,25 @@ binds {
 
     // Floating
     Mod+V { toggle-window-floating; }
+
+    // 窗口尺寸与显示模式
+    Mod+Shift+F { fullscreen-window; }
+    Mod+Shift+M { maximize-column; }
+    Mod+Shift+R { switch-preset-column-width; }   // 列宽在 25/50/75/100% 间切换
+    Mod+Shift+E { switch-preset-window-height; }
+    Mod+Shift+W { expand-column-to-available-width; }
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+
+    // 列内窗口
+    Mod+Ctrl+J { move-window-down; }
+    Mod+Ctrl+K { move-window-up; }
+    Mod+Home { focus-column-first; }
+    Mod+End  { focus-column-last; }
+
+    // 工作区移动（跨显示器）
+    Mod+Shift+Page_Down { focus-workspace-down; }
+    Mod+Shift+Page_Up   { focus-workspace-up; }
 
     // Screenshot
     Mod+P       { screenshot; }
