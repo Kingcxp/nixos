@@ -105,6 +105,33 @@
           };
         };
 
+        # UEFI + GRUB 变体：不改 BIOS、不重分区（保留 GPT/ESP），
+        # GRUB 装在 ESP 上，同样带 Catppuccin 主题。
+        # 适用于 BIOS 里没有 Legacy/CSM 选项、或不想动分区表的情况。
+        thinkbook-uefi = mkHost {
+          system = "x86_64-linux";
+          hostModule = ./hosts/thinkbook;
+          homeModules = [ ./hm-profile/niri-desktop.nix ];
+          extraModules = [
+            catppuccin.nixosModules.default
+            ({ lib, ... }: {
+              # UEFI 下 GRUB 装到 ESP（device = "nodev" 表示不写 MBR）
+              boot.loader.grub = {
+                enable = lib.mkForce true;
+                efiSupport = lib.mkForce true;
+                device = lib.mkForce "nodev";
+                # ESP 只有 285M，限制保留的启动项数量防止写满
+                configurationLimit = lib.mkForce 6;
+              };
+              boot.loader.efi.canTouchEfiVariables = lib.mkForce true;
+            })
+          ];
+          extraSpecialArgs = {
+            alien-pkgs = nix-alien.packages.x86_64-linux;
+            omp-pkgs = omp-nix.packages.x86_64-linux;
+          };
+        };
+
         # VirtualBox 试装变体：BIOS GRUB 目标盘 /dev/sda、niri 自动检测输出。
         # hardware-configuration.nix 用 VM 内 nixos-generate-config 的产物
         # （含自动的 virtualbox guest.enable，经 modules/hardware/virtualbox-guest.nix 修复可构建）。

@@ -408,20 +408,66 @@ sudo nixos-rebuild switch --flake /etc/nixos#thinkbook   # 改了配置后重建
 - 准备一个 ≥ 4 GB 的 U 盘（内容会被清空）
 - 确认目标磁盘设备名：`lsblk`（本机为 `/dev/nvme0n1`）
 
-### 1. 制作启动 U 盘
+### 1. 制作启动 U 盘（**必须 DD 模式，否则会掉进 GRUB 命令行**）
+
+NixOS 的 ISO 是 **hybrid ISO**（内含 isohybrid 引导结构），**必须原样整盘写入**。
+用 Rufus 时如果选了默认的「ISO 模式」（它会解压文件），U 盘会被写成
+`ntfs 分区 + RUFUS_BOOT 分区`，启动时 ISO 内部按 label 查找的逻辑全部失效，
+结果就是**直接掉到 `grub>` 命令行**，进不了安装器。
+
+#### 推荐：Linux 下用 dd（最可靠）
 
 ```bash
-# 在任意 Linux 上执行（/dev/sdX 换成你的 U 盘，写错会毁掉别的盘！）
-sudo dd if=nixos-graphical-*.iso of=/dev/sdX bs=4M status=progress conv=fsync
+lsblk                       # 先确认 U 盘设备名，例如 /dev/sdX（别写成系统盘！）
+sudo umount /dev/sdX*       # 卸载已挂载的分区
+sudo dd if=~/Downloads/nixos-graphical-*.iso of=/dev/sdX bs=4M conv=fsync status=progress
 sync
 ```
 
-Windows 上可用 Rufus，写入模式选 **DD 镜像模式**。
+写入约 1–5 分钟（视 U 盘速度）。**验证**（关键）：
 
-### 2. 设置 BIOS（**关键步骤，先做完再启动**）
+```bash
+lsblk -o NAME,SIZE,FSTYPE,LABEL /dev/sdX
+# 正确结果：出现 iso9660 文件系统，例如
+#   sda   28.8G iso9660 nixos-graphical-26.05-x86_64
+#     sda1 3.6G iso9660 nixos-graphical-26.05-x86_64
+#     sda2   3M vfat    EFIBOOT
+# 错误结果（Rufus ISO 模式）：ntfs + RUFUS_BOOT → 必须重写
+```
 
-本配置使用 **BIOS(Legacy) + GRUB**，而笔记本出厂默认是 UEFI 启动——
-必须先在 BIOS 里切换，否则装完无法引导。
+#### Rufus（Windows/Linux GUI）
+
+**务必在弹出「ISOHybrid image detected」对话框时选 `以 DD 镜像模式写入`**
+（Write in DD Image mode）——选默认的 ISO 模式就会掉进 `grub>`。
+写完后同样用上面的 `lsblk` 验证是否为 `iso9660`。
+
+#### 掉进 `grub>` 了怎么办
+
+不用重下 ISO：按上面重新用 DD 模式写一遍 U 盘即可。
+（ISO 本身没坏——能进 GRUB 就说明引导扇区是好的。）
+
+### 2. 选择引导方式并设置 BIOS（**关键步骤，先做完再启动**）
+
+本仓库提供**两个真机目标**，引导方式不同，先确认你要用哪个：
+
+| flake 目标 | 引导方式 | 分区表 | 需要改 BIOS？ | /boot 位置 |
+| --- | --- | --- | --- | --- |
+| `.#thinkbook` | **BIOS(Legacy) + GRUB** | MBR | **需要**：切成 Legacy/CSM | 根文件系统上（无容量限制） |
+| `.#thinkbook-uefi` | **UEFI + GRUB** | GPT | 不需要 | ESP 分区（本机 285M，偏小） |
+
+两者都用 GRUB + Catppuccin Macchiato 主题，桌面/软件完全一致，只是引导不同。
+
+**先判断本机支持哪种**：进 BIOS（F2）看 `Boot Mode`：
+
+- 有 `Legacy Support` / `CSM Support` 选项 → 两种都行，推荐 `.#thinkbook`（/boot 不受 ESP 容量限制）
+- **只有 UEFI、没有 Legacy/CSM** → 用 `.#thinkbook-uefi`（跳过下面的 BIOS 切换，直接到第 3 步）
+- 不确定当前是哪种：装好的系统里执行
+  `[ -d /sys/firmware/efi ] && echo UEFI || echo BIOS`
+
+> 本机实测：当前 Arch 是 **UEFI 启动**（`/sys/firmware/efi` 存在、`/boot` 是 vfat ESP、
+> 分区表 GPT），BIOS 为 Insyde HLCN26WW。
+
+#### 若选 `.#thinkbook`（BIOS + GRUB）：切换 BIOS
 
 1. 关机 → 开机时连按 **F2**（联想 ThinkBook 进 BIOS；部分机型是 F1 或 Fn+F2）
 2. 找到启动模式设置，通常在这几处之一：
@@ -431,11 +477,9 @@ Windows 上可用 Rufus，写入模式选 **DD 镜像模式**。
 3. **把 U 盘设为第一启动项**（`Boot` → `Boot Priority` / `EFI/Legacy Boot Priority`）
 4. 保存退出（**F10** → Yes）
 
-> ⚠️ 如果 BIOS 里**找不到任何 Legacy/CSM 选项**（纯 UEFI 固件），本配置的
-> BIOS+GRUB 方案无法使用——请告诉我，我改成 UEFI+systemd-boot 的版本
-> （改动很小，只是引导部分和分区布局不同）。
->
-> ThinkBook 20WJ（BIOS HLCN26WW）确认支持 Legacy 启动。
+> ⚠️ 如果 BIOS 里**找不到任何 Legacy/CSM 选项**（纯 UEFI 固件）：
+> 别改 BIOS，直接用 **`.#thinkbook-uefi`**（UEFI + GRUB，见本章开头表格），
+> 它同样带 Catppuccin 主题，且保留现有 GPT + ESP 分区。
 
 ### 3. 从 U 盘启动
 
@@ -516,7 +560,8 @@ cp /mnt/etc/nixos/hardware-configuration.nix /tmp/nixos_kingcq/hosts/thinkbook/h
 ```bash
 sudo cp -r /tmp/nixos_kingcq /mnt/nixos_kingcq
 cd /mnt/nixos_kingcq
-sudo nixos-install --flake .#thinkbook
+sudo nixos-install --flake .#thinkbook        # BIOS+GRUB（MBR 分区表）
+# 或：sudo nixos-install --flake .#thinkbook-uefi   # UEFI+GRUB（GPT + ESP）
 ```
 
 - 会下载约 3 GB 并按需构建，**大概 20–40 分钟**（视网络）
