@@ -7,6 +7,11 @@
   # 扩展随 nixpkgs 版本锁定，升级系统（nix flake update + rebuild）即自动更新。
   programs.vscode = {
     enable = true;
+    # 对齐 Arch 的 ~/.vscode/argv.json：界面语言中文 + 基础密码存储
+    argvSettings = {
+      locale = "zh-cn";
+      password-store = "basic";
+    };
     mutableExtensionsDir = false;
 
     profiles.default.extensions = with pkgs.vscode-extensions; [

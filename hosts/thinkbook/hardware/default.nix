@@ -74,6 +74,11 @@
 
   # Power management + battery conservation (ThinkBook)
   powerManagement.enable = true;
+
+  # UPower 守护进程：waybar 的 battery 模块走 libupower-glib → D-Bus，
+  # 没启用它电量模块会空白（nixpkgs 的 services.upower.enable 默认 false，
+  # powerManagement.enable 并不会启用它）。KDE 的 solid（Dolphin 电池面板）同样依赖。
+  services.upower.enable = lib.mkDefault true;
   services.tlp = {
     enable = true;
     settings = {
@@ -102,6 +107,10 @@
 
   # SSD
   services.fstrim.enable = lib.mkDefault true;
+
+  # 早期 KMS：initrd 里就加载 i915（对齐 Arch 的 mkinitcpio `kms` hook），
+  # 避免开机过程中的分辨率跳变/黑屏闪烁
+  boot.initrd.kernelModules = [ "i915" ];
 
   boot.kernelParams = [
     "i915.enable_rc6=1" # Iris Xe render power management

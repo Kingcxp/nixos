@@ -12,6 +12,8 @@
     # ---------- 图形 / 创作 ----------
     aseprite # 像素画
     blockbench
+    blender # 3D 建模/渲染
+    godot-mono # Godot 引擎（.NET/C# 版，对齐 Arch 的 godot-mono）
     krita
     libreoffice-fresh # 办公套件（中文界面由系统 locale 提供）
     neovide # neovim GUI
@@ -24,8 +26,9 @@
 
     # ---------- 网络工具 / 远程 ----------
     sqlitebrowser
+    termpdfpy # 终端 PDF 阅读器（Arch 的 termpdf.py）
+    localsend # 局域网文件互传（防火墙已放行 53317，见 modules/hardware/network.nix）
     pavucontrol # 音量控制
-    todesk # 远程桌面（nixpkgs 有官方包）
     wemeet # 腾讯会议
     microsoft-edge # 备用浏览器（unfree）
     clash-verge-rev # 代理客户端（unfree）
@@ -101,6 +104,13 @@
 
   # Godot + .NET
   environment.variables.DOTNET_ROOT = "${pkgs.dotnet-sdk}";
+
+  # ToDesk 无人值守远控：Arch 上启用了 todeskd.service，NixOS 有对应模块
+  # （自动装 pkgs.todesk 并拉起 todeskd 守护进程，配置存 /var/lib/todesk）
+  services.todesk.enable = true;
+
+  # virt-manager 需要 libvirtd 才能用（只装 GUI 是打不开虚拟机的）
+  virtualisation.libvirtd.enable = true;
 
   # Homebrew on Linux：官方支持 /home/linuxbrew（brew 自更新，不走 nix）
   # 首次 rebuild 时自动执行官方 installer（幂等：已装则跳过）

@@ -3,4 +3,6 @@ output "eDP-1" {
     mode "2560x1600@60"
     scale 1.666667
     transform "normal"
+    // 对齐 Hyprland 的 `vrr, 1`；面板不支持时 niri 会自动忽略
+    variable-refresh-rate
 }

@@ -403,7 +403,25 @@ sudo nixos-rebuild switch --flake /etc/nixos#thinkbook   # 改了配置后重建
 
 ### 0. 装之前（5 分钟准备）
 
-- **备份数据**——下面的分区操作会清空整块磁盘
+- **备份数据**——下面的分区操作会清空整块磁盘。下面这些**不在 NixOS 配置里**，
+  丢了就要重来（体积为本机实测）：
+
+  | 要备份的东西 | 路径 | 体积 | 说明 |
+  | --- | --- | --- | --- |
+  | 代码仓库 | `~/workspace` | 1.2 G | 含本仓库，**最重要** |
+  | SSH 私钥 | `~/.ssh/` | 8 K | `id_ed25519`，重装后要放回来（git 推送/签名都用它） |
+  | git 凭据 | `~/.git-credentials` | 4 K | `credential.helper=store` 保存的 HTTPS token |
+  | 浏览器数据 | `~/.mozilla/` | 298 M | 书签/密码/历史（或改用 Firefox 账号同步） |
+  | 代理订阅 | `~/.config/io.github.clash-verge-rev.clash-verge-rev/` | 小 | Clash Verge 的订阅链接 |
+  | 虚拟机 | `~/VirtualBox VMs/` | 56 G | 想继续用 VirtualBox 需单独处理（见下） |
+  | 其它资料 | `~/Documents`、`~/Downloads`、`~/go` | — | 自行判断 |
+
+  > **VirtualBox 的虚拟机**：NixOS 配置里默认用 `virt-manager`（KVM）替代 VirtualBox，
+  > `.vdi` 不能直接被 virt-manager 使用。要保留虚拟机，二选一：
+  > ① 装回 VirtualBox：`virtualisation.virtualbox.host.enable = true;` 并把用户加入
+  > `vboxusers` 组（然后 `VBoxManage clonehd` 的 VDI 可直接用）；
+  > ② 转换格式：`qemu-img convert -O qcow2 xxx.vdi xxx.qcow2` 后用 virt-manager 导入。
+
 - 下载 NixOS ISO：<https://nixos.org/download>（Graphical ISO）
 - 准备一个 ≥ 4 GB 的 U 盘（内容会被清空）
 - 确认目标磁盘设备名：`lsblk`（本机为 `/dev/nvme0n1`）

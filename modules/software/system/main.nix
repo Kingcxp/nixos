@@ -18,6 +18,8 @@
     extraGroups = [
       "wheel" # sudo 权限（NixOS 默认 wheel 组可 sudo）
       "networkmanager"
+      "video" # 对齐 Arch（GPU/背光/摄像头等设备访问）
+      "libvirtd" # virt-manager 免 root 管理虚拟机
     ];
   };
 

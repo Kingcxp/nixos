@@ -1,6 +1,18 @@
 // Layout: gaps and column behavior (user prefers 8px-ish, square-ish corners
 // are handled via windowrule geometry-corner-radius).
 layout {
+    // 对齐 myconfig Hyprland：border_size=2、col.active_border 为
+    // sky→pink 90deg 渐变、col.inactive_border 为 overlay0；
+    // Hyprland 没有 focus-ring，故关闭 niri 的聚焦环，只留边框。
+    focus-ring {
+        off
+    }
+    border {
+        width 2
+        active-gradient from="#91d7e3" to="#f5bde6" angle=90
+        inactive-color "#6e738d"
+    }
+
     gaps 2
     struts {
         left 1

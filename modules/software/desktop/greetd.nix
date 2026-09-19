@@ -12,7 +12,11 @@
       # Password login via the tuigreet greeter. No autologin: the user
       # explicitly wants a password prompt at boot (security).
       default_session = {
-        command = "tuigreet --time --remember --cmd niri-session";
+        # --theme：tuigreet 0.9.1 的内联配色 spec（component=color;…），
+        # 只能用终端支持的 ANSI 颜色名。取值按 Catppuccin Macchiato 近似：
+        #   container=base、border/title/greet/button=lavender、
+        #   prompt=blue、action=teal、time=overlay0
+        command = "tuigreet --time --remember --theme 'container=black;text=white;border=lightmagenta;title=lightmagenta;greet=lightmagenta;prompt=lightblue;input=white;action=lightcyan;button=lightmagenta;time=darkgray' --cmd niri-session";
         user = "greeter";
       };
     };

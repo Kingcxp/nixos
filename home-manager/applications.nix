@@ -29,6 +29,11 @@
     networkmanagerapplet
     blueman
     fcitx5
+
+    # QQ：下面的 xdg.desktopEntries.qq 引用了它，这里装进 PATH 才一致
+    qq
+    # 压缩包默认用 ark 打开（见下方 xdg.mimeApps）
+    kdePackages.ark
   ];
 
   # QQ under Wayland (fix from friend's config, kept)
