@@ -94,36 +94,41 @@
     in
     {
       nixosConfigurations = {
+        # 默认目标：UEFI + GRUB（GRUB 装到 ESP，保留 GPT 分区表）
         thinkbook = mkHost {
-          system = "x86_64-linux";
-          hostModule = ./hosts/thinkbook;
-          homeModules = [ ./hm-profile/niri-desktop.nix ];
-          extraModules = [ catppuccin.nixosModules.default ];
-          extraSpecialArgs = {
-            alien-pkgs = nix-alien.packages.x86_64-linux;
-            omp-pkgs = omp-nix.packages.x86_64-linux;
-          };
-        };
-
-        # UEFI + GRUB 变体：不改 BIOS、不重分区（保留 GPT/ESP），
-        # GRUB 装在 ESP 上，同样带 Catppuccin 主题。
-        # 适用于 BIOS 里没有 Legacy/CSM 选项、或不想动分区表的情况。
-        thinkbook-uefi = mkHost {
           system = "x86_64-linux";
           hostModule = ./hosts/thinkbook;
           homeModules = [ ./hm-profile/niri-desktop.nix ];
           extraModules = [
             catppuccin.nixosModules.default
             ({ lib, ... }: {
-              # UEFI 下 GRUB 装到 ESP（device = "nodev" 表示不写 MBR）
               boot.loader.grub = {
-                enable = lib.mkForce true;
-                efiSupport = lib.mkForce true;
-                device = lib.mkForce "nodev";
-                # ESP 只有 285M，限制保留的启动项数量防止写满
-                configurationLimit = lib.mkForce 6;
+                efiSupport = lib.mkDefault true;
+                device = lib.mkDefault "nodev"; # UEFI：不写 MBR
+                # ESP 偏小（本机 285M），限制保留的启动项数量
+                configurationLimit = lib.mkDefault 6;
               };
-              boot.loader.efi.canTouchEfiVariables = lib.mkForce true;
+              boot.loader.efi.canTouchEfiVariables = lib.mkDefault true;
+            })
+          ];
+          extraSpecialArgs = {
+            alien-pkgs = nix-alien.packages.x86_64-linux;
+            omp-pkgs = omp-nix.packages.x86_64-linux;
+          };
+        };
+
+        # BIOS(Legacy) 变体：GRUB 写 MBR，需要 BIOS 里开启 Legacy/CSM
+        thinkbook-legacy-bios = mkHost {
+          system = "x86_64-linux";
+          hostModule = ./hosts/thinkbook;
+          homeModules = [ ./hm-profile/niri-desktop.nix ];
+          extraModules = [
+            catppuccin.nixosModules.default
+            ({ lib, ... }: {
+              boot.loader.grub = {
+                efiSupport = lib.mkDefault false;
+                device = lib.mkDefault "/dev/nvme0n1"; # BIOS：写 MBR
+              };
             })
           ];
           extraSpecialArgs = {

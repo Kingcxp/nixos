@@ -1,7 +1,7 @@
 # NixOS Configurations — kingcq / ThinkBook
 
 这是一个基于 Flake 的 NixOS 配置仓库，管理一台 ThinkBook 笔记本
-（Intel i7-1160G7 / Iris Xe / NVMe / BIOS+GRUB）。它也是一个可读的示例，
+（Intel i7-1160G7 / Iris Xe / NVMe / UEFI+GRUB）。它也是一个可读的示例，
 展示如何把个人 NixOS 环境组织成声明式、可复现、可回滚的系统配置。
 
 ## 快速开始
@@ -396,9 +396,9 @@ sudo nixos-rebuild switch --flake /etc/nixos#thinkbook   # 改了配置后重建
    sudo nixos-rebuild switch --flake /etc/nixos#my-machine
    ```
 
-## 安装教程（BIOS + GRUB，从零到可用桌面）
+## 安装教程（UEFI + GRUB，从零到可用桌面）
 
-> 本配置使用 **BIOS 启动 + GRUB**（不是 UEFI/systemd-boot）。
+> 本配置使用 **UEFI + GRUB**（默认）；也提供 BIOS(Legacy) 变体。
 > 先在虚拟机里练手？见第 14 节，用专用主机 `.#thinkbook-vm`。
 
 ### 0. 装之前（5 分钟准备）
@@ -446,44 +446,39 @@ lsblk -o NAME,SIZE,FSTYPE,LABEL /dev/sdX
 不用重下 ISO：按上面重新用 DD 模式写一遍 U 盘即可。
 （ISO 本身没坏——能进 GRUB 就说明引导扇区是好的。）
 
-### 2. 选择引导方式并设置 BIOS（**关键步骤，先做完再启动**）
+### 2. 引导方式（默认 UEFI，无需改 BIOS）
 
-本仓库提供**两个真机目标**，引导方式不同，先确认你要用哪个：
+本仓库提供**两个真机目标**，桌面与软件完全一致，只有引导不同：
 
-| flake 目标 | 引导方式 | 分区表 | 需要改 BIOS？ | /boot 位置 |
+| flake 目标 | 引导 | 分区表 | 需要改 BIOS？ | /boot |
 | --- | --- | --- | --- | --- |
-| `.#thinkbook` | **BIOS(Legacy) + GRUB** | MBR | **需要**：切成 Legacy/CSM | 根文件系统上（无容量限制） |
-| `.#thinkbook-uefi` | **UEFI + GRUB** | GPT | 不需要 | ESP 分区（本机 285M，偏小） |
+| **`.#thinkbook`**（默认） | **UEFI + GRUB** | GPT | 不需要 | ESP 分区（建议 ≥1G） |
+| `.#thinkbook-legacy-bios` | BIOS(Legacy) + GRUB | MBR | 需要切 Legacy/CSM | 根文件系统上 |
 
-两者都用 GRUB + Catppuccin Macchiato 主题，桌面/软件完全一致，只是引导不同。
+两者都用 GRUB + Catppuccin Macchiato 主题。
 
-**先判断本机支持哪种**：进 BIOS（F2）看 `Boot Mode`：
+**默认走 UEFI**——开机时在 F12 菜单里选 **UEFI** 那一项启动 U 盘即可，
+不需要动 BIOS 设置。
 
-- 有 `Legacy Support` / `CSM Support` 选项 → 两种都行，推荐 `.#thinkbook`（/boot 不受 ESP 容量限制）
-- **只有 UEFI、没有 Legacy/CSM** → 用 `.#thinkbook-uefi`（跳过下面的 BIOS 切换，直接到第 3 步）
-- 不确定当前是哪种：装好的系统里执行
-  `[ -d /sys/firmware/efi ] && echo UEFI || echo BIOS`
+<details>
+<summary>只有你想用 BIOS(Legacy) 时才需要看这段</summary>
 
-> 本机实测：当前 Arch 是 **UEFI 启动**（`/sys/firmware/efi` 存在、`/boot` 是 vfat ESP、
-> 分区表 GPT），BIOS 为 Insyde HLCN26WW。
+1. 开机连按 **F2** 进 BIOS
+2. `Boot` → `Boot Mode` 改为 **Legacy Support**（或 `CSM Support` → Enabled）
+   - 若只看到 `Secure Boot`：先设 **Disabled**，Legacy/CSM 选项才会出现
+3. 保存退出（F10）
+4. 之后 F12 菜单里选 **Legacy** 那一项启动 U 盘
 
-#### 若选 `.#thinkbook`（BIOS + GRUB）：切换 BIOS
+</details>
 
-1. 关机 → 开机时连按 **F2**（联想 ThinkBook 进 BIOS；部分机型是 F1 或 Fn+F2）
-2. 找到启动模式设置，通常在这几处之一：
-   - `Boot` → `Boot Mode` → 改为 **Legacy Support**（或 `CSM Support` → Enabled）
-   - `Startup` → `UEFI/Legacy Boot` → **Legacy Only**
-   - 若只看到 `Secure Boot`：先把它设为 **Disabled**，Legacy/CSM 选项才会出现
-3. **把 U 盘设为第一启动项**（`Boot` → `Boot Priority` / `EFI/Legacy Boot Priority`）
-4. 保存退出（**F10** → Yes）
-
-> ⚠️ 如果 BIOS 里**找不到任何 Legacy/CSM 选项**（纯 UEFI 固件）：
-> 别改 BIOS，直接用 **`.#thinkbook-uefi`**（UEFI + GRUB，见本章开头表格），
-> 它同样带 Catppuccin 主题，且保留现有 GPT + ESP 分区。
+> 当前系统是哪种模式：`[ -d /sys/firmware/efi ] && echo UEFI || echo BIOS`
+> （本机实测：UEFI，BIOS 为 Insyde HLCN26WW）
 
 ### 3. 从 U 盘启动
 
-1. 关机 → 开机时连按 **F12**（联想）→ 选择 U 盘（若列表里出现两个，选 **Legacy** 那项）
+1. 关机 → 开机时连按 **F12**（联想）→ 选 U 盘。同一个 U 盘可能显示两项：
+   - 走默认（UEFI）→ 选 **UEFI** 那项
+   - 走 BIOS 变体 → 选 **Legacy** 那项（需先在 BIOS 里开 Legacy/CSM）
 2. 进入 live 环境（root 自动登录；图形安装器窗口会弹出来，**直接关掉**）
 3. 打开终端：`Ctrl+Alt+T`，或按 `Ctrl+Alt+F2` 切到文字终端
 
@@ -497,7 +492,7 @@ sudo nmtui            # 选 "Activate a connection" → 选 WiFi → 输密码
 ping -c2 nixos.org
 ```
 
-### 5. 分区（MBR 分区表 + 一个主分区）
+### 5. 分区（UEFI：GPT + ESP + Btrfs）
 
 ```bash
 lsblk                     # 确认目标盘，例如 /dev/nvme0n1
@@ -506,22 +501,39 @@ sudo fdisk /dev/nvme0n1   # 在交互界面依次输入：
 
 | 输入 | 含义 |
 | --- | --- |
-| `o` | 新建空 DOS(MBR) 分区表（**清空磁盘**） |
-| `n` → `p` → `1` | 新建主分区 1 |
-| 回车、回车 | 起始/结束扇区都用默认（= 整块盘） |
-| `a` | 标记分区 1 为可启动 |
+| `g` | 新建 GPT 分区表（**清空磁盘**） |
+| `n` → `1` → 回车 → `+1G` | 分区 1 = 1G（EFI 系统分区） |
+| `t` → `1` | 把分区 1 类型设为 `EFI System` |
+| `n` → `2` → 回车 → 回车 | 分区 2 = 剩余全部空间 |
 | `w` | 写入并退出 |
 
-> **想用 GPT 也行**：把 `o` 换成 `g`，然后先建一个 `+1M`、类型为
-> `BIOS boot`（fdisk 里输入 `t` 再输 `4`）的小分区，再建主分区。
-> GRUB 装在磁盘开头的空隙里——**BIOS 启动不需要 EFI 分区**。
+> ESP 给 **1G**：NixOS 的 `/boot` 就放在 ESP 上，每代内核+initrd 约 45M，
+> 285M（出厂值）会很快写满。
+
+<details>
+<summary>改用 BIOS(Legacy) 时的分区方式</summary>
+
+MBR 分区表 + 单个主分区，不需要 ESP：
+
+```bash
+sudo fdisk /dev/nvme0n1
+#   o        ← 新建空 DOS(MBR) 分区表
+#   n → p → 1 → 回车 → 回车
+#   a        ← 标记可启动
+#   w        ← 写入
+```
+
+</details>
 
 ### 6. 格式化 + 创建 Btrfs 子卷
 
 ```bash
-sudo mkfs.btrfs -L nixos /dev/nvme0n1p1
+# ① EFI 系统分区（UEFI 需要；BIOS 布局跳过这步）
+sudo mkfs.fat -F 32 /dev/nvme0n1p1
 
-sudo mount /dev/nvme0n1p1 /mnt
+# ② 根分区：Btrfs + 子卷
+sudo mkfs.btrfs -L nixos /dev/nvme0n1p2
+sudo mount /dev/nvme0n1p2 /mnt
 sudo btrfs subvolume create /mnt/@
 sudo btrfs subvolume create /mnt/@home
 sudo btrfs subvolume create /mnt/@nix
@@ -531,15 +543,14 @@ sudo umount /mnt
 ### 7. 按子卷挂载
 
 ```bash
-sudo mount -o subvol=@,compress=zstd,noatime /dev/nvme0n1p1 /mnt
-sudo mkdir -p /mnt/{home,nix}
-sudo mount -o subvol=@home,compress=zstd,noatime /dev/nvme0n1p1 /mnt/home
-sudo mount -o subvol=@nix,compress=zstd,noatime /dev/nvme0n1p1 /mnt/nix
-df -h /mnt | tail -1     # 确认已挂载（应显示磁盘总容量）
-```
+sudo mount -o subvol=@,compress=zstd,noatime /dev/nvme0n1p2 /mnt
+sudo mkdir -p /mnt/{boot,home,nix}
+sudo mount -o subvol=@home,compress=zstd,noatime /dev/nvme0n1p2 /mnt/home
+sudo mount -o subvol=@nix,compress=zstd,noatime /dev/nvme0n1p2 /mnt/nix
+sudo mount /dev/nvme0n1p1 /mnt/boot      # UEFI：ESP 挂到 /boot（BIOS 布局跳过）
 
-> BIOS + GRUB **不需要单独的 `/boot` 分区**：GRUB 直接读取根文件系统上的
-> `/boot` 目录（仓库的 `hardware-configuration.nix` 模板也是这个布局）。
+df -h /mnt | tail -1                      # 确认已挂载
+```
 
 ### 8. 生成硬件配置并替换仓库里的模板
 
@@ -564,15 +575,15 @@ cd /mnt/nixos_kingcq
 # 先确认 live 环境是哪种模式启动（决定用哪个目标，必须一致！）
 [ -d /sys/firmware/efi ] && echo "UEFI 启动" || echo "BIOS/Legacy 启动"
 
-sudo nixos-install --flake .#thinkbook        # live 是 BIOS/Legacy 启动时用
+sudo nixos-install --flake .#thinkbook        # UEFI 启动时用（默认）
 # 或
-sudo nixos-install --flake .#thinkbook-uefi   # live 是 UEFI 启动时用
+sudo nixos-install --flake .#thinkbook-legacy-bios   # BIOS/Legacy 启动时用
 ```
 
 > ⚠️ **安装目标必须与 live 环境的启动模式一致**：
-> Legacy 启动的 live 环境装 `.#thinkbook`（GRUB 写 MBR），
-> UEFI 启动的 live 环境装 `.#thinkbook-uefi`（GRUB 写 ESP）。
-> 装错会导致重启后无法引导（GRUB 装到了固件不认的位置）。
+> UEFI 启动的 live 环境装 `.#thinkbook`（GRUB 写 ESP），
+> Legacy 启动的 live 环境装 `.#thinkbook-legacy-bios`（GRUB 写 MBR）。
+> 装错会导致重启后无法引导。
 >
 > 同一个 U 盘在 F12 启动菜单里可能显示两项（UEFI 与 Legacy），
 > **你选哪项就决定了 live 环境的启动模式**。
@@ -648,12 +659,14 @@ VM 用专用主机 **`thinkbook-vm`**：GRUB 目标盘自动设为 `/dev/sda`、
 
 | 现象 | 原因与解法 |
 | --- | --- |
-| `Cannot build ... sudoers.drv`（syntax error） | 已修复；确保用的是仓库最新代码 |
-| `efiSysMountPoint '/boot' is not a mounted partition` | 说明你按旧的 UEFI 流程装了 / 或仍用 systemd-boot；本配置是 BIOS+GRUB，**不需要 EFI 分区** |
-| `cannot find a GRUB drive for /dev/nvme0n1` | 在 VM 里用了真机主机名 → 改用 `.#thinkbook-vm` |
-| 一堆小构建 `exit code 1` + 日志提 `No space left` | 磁盘/分区太小（VM 建议 60 G） |
-| 重启后又进安装器 | ISO 没拔 |
-| 下载中断报 `truncated or corrupt` | 用 `sudo nix-store --verify --check-contents --repair` 修复 |
+| U 盘启动直接进 `grub>` 命令行 | U 盘是用 Rufus 的 ISO 模式写的 → 按第 1 步用 **DD 模式**重写 |
+| `efiSysMountPoint '/boot' is not a mounted partition` | 走 UEFI 但 `/boot` 没挂 ESP → 检查第 7 步是否 `mount /dev/nvme0n1p1 /mnt/boot` |
+| `cannot find a GRUB drive for /dev/nvme0n1` | 目标与启动模式不匹配（如 UEFI 的 live 环境装 `.#thinkbook-legacy-bios`） |
+| `cannot find a GRUB drive for /dev/sda` | 在 VM 里用了真机目标 → 改用 `.#thinkbook-vm` |
+| 一堆小构建 `exit code 1` + 日志提 `No space left` | 磁盘/分区太小（VM 建议 60 G；真机 ESP 建议 ≥1 G） |
+| 重启后又进安装器 | ISO 没拔 / 启动顺序没调 |
+| 下载中断报 `truncated or corrupt` | `sudo nix-store --verify --check-contents --repair` 修复 |
+| 下载极慢、`substitutes failed` | live 环境 DNS 异常 → 见《VM-TEST.md》同名小节 |
 
 ---
 

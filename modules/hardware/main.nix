@@ -5,12 +5,12 @@
   ...
 }:
 {
-  # BIOS GRUB（MBR 安装到 /dev/nvme0n1）
-  # GRUB 主题由 catppuccin/nix 模块自动配置（catppuccin.grub.enable，见 default.nix）
-  boot.loader.grub = {
-    enable = lib.mkDefault true;
-    device = lib.mkDefault "/dev/nvme0n1";
-  };
+  # 引导器：GRUB（主题由 catppuccin/nix 模块自动配置）
+  # efiSupport / device / canTouchEfiVariables 由各 flake 目标显式声明：
+  #   thinkbook            → UEFI + GRUB（ESP，device = "nodev"）
+  #   thinkbook-legacy-bios → BIOS + GRUB（MBR，device = "/dev/nvme0n1"）
+  #   thinkbook-vm         → BIOS + GRUB（/dev/sda）
+  boot.loader.grub.enable = lib.mkDefault true;
 
   # catppuccin/nix 全局：macchiato + lavender
   # autoEnable 会自动接入支持的端口（GRUB 主题、指针、dunst、waybar、

@@ -1,4 +1,4 @@
-# ThinkBook 14s — Intel i7-1160G7 / Iris Xe / NVMe / BIOS+GRUB
+# ThinkBook 14s — Intel i7-1160G7 / Iris Xe / NVMe / UEFI+GRUB
 # This hardware-configuration.nix was hand-written based on the
 # previous Arch install's layout. Verify UUIDs against `lsblk -f`
 # during installation; a fresh `nixos-generate-config` may be safer.
@@ -56,8 +56,18 @@
     ];
   };
 
-  # 注意：本配置用 BIOS + GRUB，不需要单独的 /boot 分区
-  # （GRUB 直接读根文件系统上的 /boot 目录）。
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-uuid/0A51-499C";
+    fsType = "vfat";
+    options = [
+      "fmask=0022"
+      "dmask=0022"
+    ];
+  };
+
+  # UEFI 布局：/boot 是 EFI 系统分区（ESP）。
+  # 若改用 BIOS(Legacy) + GRUB（thinkbook-legacy-bios），则不需要该分区，
+  # /boot 会落在根文件系统上——安装时用 nixos-generate-config 重新生成即可。
 
   swapDevices = [ ];
 
