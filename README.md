@@ -588,11 +588,52 @@ sudo nixos-install --flake .#thinkbook-legacy-bios   # BIOS/Legacy 启动时用
 > 同一个 U 盘在 F12 启动菜单里可能显示两项（UEFI 与 Legacy），
 > **你选哪项就决定了 live 环境的启动模式**。
 
-- 会下载约 3 GB 并按需构建，**大概 20–40 分钟**（视网络）
 - 成功标志（最后几行）：
   `installing the GRUB 2 boot loader on /dev/nvme0n1...` →
   `Installation finished. No error reported.`
 - 中途出现 `No space left on device` → 空间不足，检查 `df -h /mnt`
+
+#### 9.1 关于耗时（重要，先读）
+
+`flake.lock` 锁定的 nixpkgs rev **不是 Hydra 构建过的 channel 版本**，所以约 **300 个
+派生在 `cache.nixos.org` 里没有**，会在你机器上现编译——其中包含几个重包
+（`aseprite`、`nodejs`、`neovim`、`steam`、`idea`、`vscode` 等）。
+
+| 场景 | 大致耗时（4 核笔记本） |
+| --- | --- |
+| 直接安装（默认） | **1–2 小时**，且编译期内存占用较高 |
+| 复用已有 store（见下） | **20–40 分钟**（几乎全部从缓存取） |
+
+> 实测（VirtualBox 4 vCPU / 6 GB）：直接安装时 `nix` 进程因内存不足被 OOM 杀掉过一次；
+> 真机 16 GB 内存不会这么紧张，但编译期建议别同时开重负载程序。
+
+#### 9.2 加速安装：复用已有 `/nix/store`（可选）
+
+如果你**之前在这台机器上装过 nix**（或另一台机器有同一套配置的 store），
+可以把已有闭包导出成本地二进制缓存，安装时直接取用：
+
+```bash
+# ① 在旧系统上（本仓库目录内）执行：把完整闭包写入 U 盘/移动硬盘
+nix copy --to "file:///run/media/kingcq/USB/nixcache" \
+  ".#nixosConfigurations.thinkbook.config.system.build.toplevel"
+```
+
+```bash
+# ② 启动安装 U 盘、分区挂载完成后，在 live 环境里插上该盘并挂载
+sudo mkdir -p /mnt/usb && sudo mount /dev/sdX1 /mnt/usb
+
+sudo nixos-install --flake .#thinkbook \
+  --substituters "file:///mnt/usb/nixcache https://cache.nixos.org" \
+  --option require-sigs false
+```
+
+- `--option require-sigs false` **必须加**：本地缓存里的包没有签名。
+- 缓存体积与闭包同量级（**约 20 GB**），U 盘/移动硬盘请留足空间。
+- 没有旧 store 可复用？跳过本节，直接按上面的命令装，只是慢。
+
+> **不要**为了提速去 `nix flake update`：实测把 nixpkgs 更新到当前 master tip
+> 反而需要编译 **774 个**（比锁定的 rev 更差），而且新版 nixpkgs 移除了
+> `pkgs.gcr`（需改成 `pkgs.gcr_4`）会直接报错。
 
 ### 10. 重启
 
@@ -654,6 +695,9 @@ VM 用专用主机 **`thinkbook-vm`**：GRUB 目标盘自动设为 `/dev/sda`、
 - 安装命令把 `--flake .#thinkbook` 换成 `--flake .#thinkbook-vm`
 - 磁盘是 `/dev/sda`（分区/格式化步骤同样替换设备名）
 - 重启前**移除 ISO**
+- 如果你把 VM 固件设成 **EFI**（VirtualBox 设置 → 系统 → 启用 EFI），
+  则不需要 `-vm` 变体，直接用真机目标 `.#thinkbook` 即可（已实测：GPT + ESP 安装、
+  GRUB 装到 ESP、固件启动项写入、重启进 tuigreet 全部正常）
 
 ### 15. 装到一半出问题？
 
