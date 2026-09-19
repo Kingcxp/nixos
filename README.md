@@ -560,9 +560,22 @@ cp /mnt/etc/nixos/hardware-configuration.nix /tmp/nixos_kingcq/hosts/thinkbook/h
 ```bash
 sudo cp -r /tmp/nixos_kingcq /mnt/nixos_kingcq
 cd /mnt/nixos_kingcq
-sudo nixos-install --flake .#thinkbook        # BIOS+GRUB（MBR 分区表）
-# 或：sudo nixos-install --flake .#thinkbook-uefi   # UEFI+GRUB（GPT + ESP）
+
+# 先确认 live 环境是哪种模式启动（决定用哪个目标，必须一致！）
+[ -d /sys/firmware/efi ] && echo "UEFI 启动" || echo "BIOS/Legacy 启动"
+
+sudo nixos-install --flake .#thinkbook        # live 是 BIOS/Legacy 启动时用
+# 或
+sudo nixos-install --flake .#thinkbook-uefi   # live 是 UEFI 启动时用
 ```
+
+> ⚠️ **安装目标必须与 live 环境的启动模式一致**：
+> Legacy 启动的 live 环境装 `.#thinkbook`（GRUB 写 MBR），
+> UEFI 启动的 live 环境装 `.#thinkbook-uefi`（GRUB 写 ESP）。
+> 装错会导致重启后无法引导（GRUB 装到了固件不认的位置）。
+>
+> 同一个 U 盘在 F12 启动菜单里可能显示两项（UEFI 与 Legacy），
+> **你选哪项就决定了 live 环境的启动模式**。
 
 - 会下载约 3 GB 并按需构建，**大概 20–40 分钟**（视网络）
 - 成功标志（最后几行）：
