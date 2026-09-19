@@ -82,6 +82,10 @@
     dotnet-sdk # C#（godot-mono 使用）
     sqlite
 
+    # ---------- AI 编码 CLI ----------
+    # GitHub Copilot CLI（Arch 上曾用 npx/临时安装，~/.copilot 与 fish 补全有残留）
+    github-copilot-cli
+
     # ---------- Minecraft 启动器 ----------
     hmcl
 
