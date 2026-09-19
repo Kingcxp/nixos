@@ -46,6 +46,7 @@
 
     # ---------- JS / TS（Vue/HTML/CSS/JS/TS） ----------
     nodejs_22
+    bun # JS 运行时/包管理器（全局安装落在 ~/.bun）
     pnpm
     typescript-language-server
   ];

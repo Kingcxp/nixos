@@ -33,6 +33,10 @@
       # ~/.local/bin 优先（容纳自更新工具，如 omp）
       fish_add_path -p ~/.local/bin
 
+      # bun：全局安装的包落在 ~/.bun/bin（对齐 Arch 的 fish config）
+      set --export BUN_INSTALL "$HOME/.bun"
+      fish_add_path -p ~/.bun/bin
+
       # 常用别名
       alias update="sudo nixos-rebuild switch"
       alias ll="ls -la"

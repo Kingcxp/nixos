@@ -29,6 +29,7 @@
     termpdfpy # 终端 PDF 阅读器（Arch 的 termpdf.py）
     localsend # 局域网文件互传（防火墙已放行 53317，见 modules/hardware/network.nix）
     pavucontrol # 音量控制
+    rustdesk # 远程桌面（nixpkgs 里为源码构建，不在二进制缓存，首次安装编译较久）
     wemeet # 腾讯会议
     microsoft-edge # 备用浏览器（unfree）
     clash-verge-rev # 代理客户端（unfree）
